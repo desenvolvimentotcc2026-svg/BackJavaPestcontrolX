@@ -1,0 +1,66 @@
+package com.dedetizacao.app.dedetizacao.Model;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "mensagens")
+public class Mensagem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "remetente_id", nullable = false)
+    private Long remetenteId;
+
+    @Column(name = "destinatario_id", nullable = false)
+    private Long destinatarioId;
+
+    @Column(name = "empresa_id")
+    private Long empresaId;
+
+    @Column(name = "cliente_id")
+    private Long clienteId;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String conteudo;
+
+    @Column(name = "data_hora", nullable = false)
+    private LocalDateTime dataHora;
+
+    public Mensagem() {
+        this.dataHora = LocalDateTime.now();
+    }
+
+
+    public void setTexto(String texto) {
+        this.conteudo = texto;
+    }
+
+    public void setRemetente(String remetente) {
+        // Como o controller passa uma String, tentamos converter para Long.
+        // Se for um texto tipo "BOT", definimos um ID padrão (ex: 0L) para não quebrar o banco.
+        try {
+            this.remetenteId = Long.parseLong(remetente);
+        } catch (NumberFormatException e) {
+            this.remetenteId = 0L;
+        }
+    }
+
+    // Getters e Setters Padrões
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getRemetenteId() { return remetenteId; }
+    public void setRemetenteId(Long remetenteId) { this.remetenteId = remetenteId; }
+    public Long getDestinatarioId() { return destinatarioId; }
+    public void setDestinatarioId(Long destinatarioId) { this.destinatarioId = destinatarioId; }
+    public Long getEmpresaId() { return empresaId; }
+    public void setEmpresaId(Long empresaId) { this.empresaId = empresaId; }
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public String getConteudo() { return conteudo; }
+    public void setConteudo(String conteudo) { this.conteudo = conteudo; }
+    public LocalDateTime getDataHora() { return dataHora; }
+    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+}
