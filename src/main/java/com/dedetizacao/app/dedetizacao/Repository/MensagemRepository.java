@@ -16,7 +16,7 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
             "OR (m.remetenteId = :user2 AND m.destinatarioId = :user1) ORDER BY m.dataHora ASC")
     List<Mensagem> buscarHistoricoConversa(@Param("user1") Long user1, @Param("user2") Long user2);
 
-    // Usado no MensagemService para contar interações e ativar o Auto-Bot
+    // Usado no MensagemService para contar interações e ativar o Auto-Bot (PestBot)
     long countByRemetenteIdAndDestinatarioId(Long remetenteId, Long destinatarioId);
 
     List<Mensagem> findByEmpresaIdAndClienteId(Long empresaId, Long clienteId);
