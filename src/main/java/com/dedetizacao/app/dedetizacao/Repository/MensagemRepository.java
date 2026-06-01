@@ -18,4 +18,6 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
 
     // Usado no MensagemService para contar interações e ativar o Auto-Bot
     long countByRemetenteIdAndDestinatarioId(Long remetenteId, Long destinatarioId);
+
+    List<Mensagem> findByEmpresaIdAndClienteId(Long empresaId, Long clienteId);
 }
