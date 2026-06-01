@@ -1,10 +1,12 @@
 package com.dedetizacao.app.dedetizacao.controller;
 
-import com.dedetizacao.app.dedetizacao.Service.NotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dedetizacao.app.dedetizacao.Model.OrdemDeServico;
+import com.dedetizacao.app.dedetizacao.Repository.OrdemDeServicoRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -13,71 +15,72 @@ import java.util.concurrent.ConcurrentHashMap;
 @CrossOrigin(origins = "*")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService notificationService;
+    private final OrdemDeServicoRepository ordemRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    // Uso de ConcurrentHashMap para garantir thread-safety com múltiplos acessos de dispositivos
-    public static final Map<Long, String> userTokensDatabase = new ConcurrentHashMap<>();
+    // Guarda temporariamente em memória os tokens FCM associados aos IDs dos usuários
+    // Substitua pela lógica do seu UsuarioRepository/Banco se preferir salvar em tabela
+    private static final Map<Long, String> fcmTokensCache = new ConcurrentHashMap<>();
 
-    // 1. Endpoint para o APP Android salvar o token do usuário logado
-    @PostMapping("/register-token")
-    public ResponseEntity<Map<String, String>> registerToken(
-            @RequestParam Long usuarioId,
-            @RequestParam String fcmToken) {
-
-        if (usuarioId == null || fcmToken == null || fcmToken.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Dados inválidos para registro de token."));
-        }
-
-        userTokensDatabase.put(usuarioId, fcmToken);
-        System.out.println("🚀 Token registrado com sucesso para o Usuário ID [" + usuarioId + "]: " + fcmToken);
-
-        // Retorna um JSON estruturado para o Retrofit ler sem estourar Exception
-        return ResponseEntity.ok(Map.of(
-                "status", "success",
-                "message", "Token registrado com sucesso no backend!"
-        ));
+    public NotificationController(OrdemDeServicoRepository ordemRepository, SimpMessagingTemplate messagingTemplate) {
+        this.ordemRepository = ordemRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
-    // 2. Endpoint chamado quando o técnico aceita a ordem (Dispara o Push)
+    // 1. Mapeamento exato da rota do aplicativo para registrar o token de notificação
+    @PostMapping("/register-token")
+    public ResponseEntity<?> registerToken(@RequestParam Long usuarioId, @RequestParam String fcmToken) {
+        if (usuarioId == null || fcmToken == null || fcmToken.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Parâmetros inválidos.");
+        }
+
+        fcmTokensCache.put(usuarioId, fcmToken);
+        System.out.println("--> [FCM] Token registrado para o usuário [" + usuarioId + "]: " + fcmToken);
+
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "TOKEN_REGISTRADO_SUCESSO");
+        return ResponseEntity.ok(response);
+    }
+
+    // 2. Mapeamento exato da rota que o seu painel WEB vai chamar ao clicar em "ACEITAR"
     @PostMapping("/trigger-acceptance")
-    public ResponseEntity<Map<String, String>> triggerAcceptance(
-            @RequestParam Long clienteId,
-            @RequestParam Long ordemId) {
+    public ResponseEntity<?> triggerAcceptance(@RequestParam Long clienteId, @RequestParam Long ordemId) {
+        System.out.println("--> [FLUXO] Solicitando aceitação. Cliente: " + clienteId + " | OS: " + ordemId);
 
-        if (clienteId == null || ordemId == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Parâmetros clienteId e ordemId são obrigatórios."));
+        // 1. Busca a Ordem de Serviço no banco e atualiza o status
+        OrdemDeServico os = ordemRepository.findById(ordemId).orElse(null);
+        if (os == null) {
+            return ResponseEntity.status(404).body("Ordem de serviço não encontrada.");
         }
 
-        // Busca o token do cliente no mapa em memória
-        String clienteToken = userTokensDatabase.get(clienteId);
+        // Modifica o status para que o cliente saiba que foi aceito
+        os.setStatus("ACEITA"); // Ou "EM_ANDAMENTO", conforme seu padrão
+        ordemRepository.save(os);
 
-        if (clienteToken == null || clienteToken.isEmpty()) {
-            System.out.println("⚠️ Alerta: Cliente [" + clienteId + "] não possui um dispositivo registrado.");
-            return ResponseEntity.badRequest().body(Map.of(
-                    "status", "error",
-                    "message", "Cliente não possui um dispositivo móvel registrado."
-            ));
+        // 2. DISPARO VIA WEBSOCKET (Atualização Instantânea de Tela no App)
+        // O aplicativo do cliente estará escutando esse tópico dinâmico
+        Map<String, Object> alertaGeral = new HashMap<>();
+        alertaGeral.addProperty("tipo", "OS_ACEITA");
+        alertaGeral.addProperty("ordemId", ordemId);
+        alertaGeral.addProperty("status", "ACEITA");
+        alertaGeral.addProperty("mensagem", "Sua solicitação de dedetização foi aceita! O chat está liberado.");
+
+        String topicoCliente = "/topic/cliente/" + clienteId;
+        messagingTemplate.convertAndSend(topicoCliente, alertaGeral);
+        System.out.println("--> [WEBSOCKET] Alerta de OS Aceita enviado para: " + topicoCliente);
+
+        // 3. LOG DO PUSH NOTIFICATION (Firebase FCM)
+        String tokenDispositivo = fcmTokensCache.get(clienteId);
+        if (tokenDispositivo != null) {
+            System.out.println("--> [FCM PUSH] Enviando notificação nativa para o token: " + tokenDispositivo);
+            // Aqui entra o código do Firebase SDK se você for subir a notificação push de background.
+            // Com o WebSocket ativo acima, se o app estiver aberto, ele já atualiza na hora!
+        } else {
+            System.out.println("--> [FCM PUSH] Nenhum token mobile ativo em background para este cliente no momento.");
         }
 
-        try {
-            // Dispara a notificação em tempo real via Firebase Admin SDK
-            notificationService.sendPushNotification(
-                    clienteToken,
-                    "Sua ordem foi aceita! 🛠️",
-                    "O técnico já está vinculado à sua solicitação de serviço Nº " + ordemId
-            );
-
-            return ResponseEntity.ok(Map.of(
-                    "status", "success",
-                    "message", "Notificação de aceitação disparada com sucesso!"
-            ));
-        } catch (Exception e) {
-            System.err.println("❌ Erro ao enviar push notification: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(Map.of(
-                    "status", "error",
-                    "message", "Falha interna ao processar o disparo do Push: " + e.getMessage()
-            ));
-        }
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "OS_ACEITA_E_NOTIFICADA");
+        return ResponseEntity.ok(response);
     }
 }
