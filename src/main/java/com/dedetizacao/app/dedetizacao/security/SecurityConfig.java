@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("❌ [BLOQUEIO SECURITY] Rota recusada por falta de autenticação: " + request.getRequestURI());
+                            System.out.println("❌ [BLOQUEIO SECURITY] Rota recusada: " + request.getRequestURI());
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"erro\": \"Não autorizado. Token ausente ou inválido.\"}");
@@ -49,11 +49,10 @@ public class SecurityConfig {
                         .requestMatchers("/ws-pestcontrol/**", "/ws-pestcontrol-sockjs/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        // Libera as rotas de API desde que o usuário envie um Token válido
+                        // Libera as rotas de API protegidas exigindo apenas um token válido
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
-                )
-                )
+                ) // A quebra estava provavelmente aqui!
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
