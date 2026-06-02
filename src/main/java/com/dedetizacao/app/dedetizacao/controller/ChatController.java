@@ -32,24 +32,29 @@ public class ChatController {
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
 
+        // Alerta Importante: Garanta que o Objeto 'mensagem' enviado pelo Front-end (App Android/Web)
+        // contenha um 'remetenteId' e 'destinatarioId' que REALMENTE existam na tabela 'usuarios'.
+        // Se o front estiver passando o ID da Empresa (Ex: 1) no campo destinatarioId, e não houver um Usuário com ID 1, o Hibernate quebrará.
+
         // Salva a mensagem que o usuário digitou (Cliente ou Técnico) no banco
         Mensagem mensagemSalva = mensagemRepository.save(mensagem);
 
         // Análise do conteúdo para ativação de comandos numéricos do PestBot (1, 2, 3, 4, 5)
         String textoLimpo = mensagem.getConteudo() != null ? mensagem.getConteudo().trim() : "";
 
+        // Passamos o mensagem.getRemetenteId() para sabermos quem deve receber a resposta do Bot de volta
         if (textoLimpo.equalsIgnoreCase("menu") || textoLimpo.equalsIgnoreCase("ajuda") || textoLimpo.equalsIgnoreCase("bot")) {
-            dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
+            dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("1")) {
-            dispararRespostaBot(empresaId, clienteId, obterTermosLGPD());
+            dispararRespostaBot(empresaId, clienteId, obterTermosLGPD(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("2")) {
-            dispararRespostaBot(empresaId, clienteId, obterLicenciamentoAmbiental());
+            dispararRespostaBot(empresaId, clienteId, obterLicenciamentoAmbiental(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("3")) {
-            dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas());
+            dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("4")) {
-            dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
+            dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("5")) {
-            dispararRespostaBot(empresaId, clienteId, obterSuporteHumano());
+            dispararRespostaBot(empresaId, clienteId, obterSuporteHumano(), mensagem.getRemetenteId());
         }
 
         return mensagemSalva;
@@ -58,13 +63,19 @@ public class ChatController {
     /**
      * Constrói e encaminha a mensagem automatizada do robô para o barramento WebSocket
      */
-    private void dispararRespostaBot(Long empresaId, Long clienteId, String conteudoBot) {
+    private void dispararRespostaBot(Long empresaId, Long clienteId, String conteudoBot, Long usuarioClienteId) {
         Mensagem respostaBot = new Mensagem();
         respostaBot.setEmpresaId(empresaId);
         respostaBot.setClienteId(clienteId);
-        respostaBot.setRemetenteId(0L); // ID 0L interpretado no sistema como o PESTBOT
-        respostaBot.setDestinatarioId(clienteId);
-        respostaBot.setTexto(conteudoBot);
+
+        // Regra de Integridade: ID 0L é o PESTBOT. Ele PRECISA existir na tabela 'usuarios' do seu Banco de Dados.
+        respostaBot.setRemetenteId(0L);
+
+        // O destinatário do Bot será o ID de usuário do cliente que interagiu
+        respostaBot.setDestinatarioId(usuarioClienteId);
+
+        // CORREÇÃO: Alterado de setTexto() para setConteudo() para bater com a propriedade da sua Entidade!
+        respostaBot.setConteudo(conteudoBot);
         respostaBot.setDataHora(LocalDateTime.now());
 
         // Mantém a integridade do histórico guardando a resposta do Bot na tabela do banco
@@ -104,7 +115,7 @@ public class ChatController {
                 "A empresa prestadora opera sob homologação técnica estrita nos seguintes marcos regulatórios:\n\n" +
                 "• **ANVISA (RDC nº 52/2009):** Funcionamento integralmente autorizado para o controle de vetores e pragas utilizando domissanitários de uso restrito profissional com baixíssima toxicidade residual.\n" +
                 "• **IBAMA (Instrução Normativa nº 13/2013):** Registro ativo no Cadastro Técnico Federal (CTF) para atividades potencialmente poluidoras.\n" +
-                "• **CONSELHO DE CLASSE:** Operações supervisionadas com emissão de ART (Anotação de Responsabilidade Técnica).";
+                "• **CONSELHO DE CLASSE:** Operações supervisionadas com emissão de ART (Anotação de Responsabilidade Técnico).";
     }
 
     private String obterCatalogoPragas() {
