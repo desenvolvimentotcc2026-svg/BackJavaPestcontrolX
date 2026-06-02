@@ -49,9 +49,10 @@ public class SecurityConfig {
                         .requestMatchers("/ws-pestcontrol/**", "/ws-pestcontrol-sockjs/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/api/tecnico/**").hasAuthority("ROLE_TECNICO")
-                        .requestMatchers("/api/cliente/**").hasAuthority("ROLE_CLIENTE")
+                        // Libera as rotas de API desde que o usuário envie um Token válido
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
+                )
                 )
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 

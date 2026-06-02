@@ -20,10 +20,13 @@ public class JwtService {
     }
 
     public String gerarToken(String email){
+        // 30 dias de validade em milissegundos (O 'L' é obrigatório no Java para tipo Long)
+        long tempoExpiracao = 2592000000L;
+
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 horas de validade
+                .expiration(new Date(System.currentTimeMillis() + tempoExpiracao))
                 .signWith(getKey())
                 .compact();
     }
