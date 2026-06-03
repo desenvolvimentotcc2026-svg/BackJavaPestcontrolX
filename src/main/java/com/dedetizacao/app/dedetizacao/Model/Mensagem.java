@@ -11,6 +11,7 @@ public class Mensagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Removemos os mapeamentos complexos de @ManyToOne que forçavam a Foreign Key estrita
     private Long remetenteId;
     private Long destinatarioId;
     private Long empresaId;
@@ -19,17 +20,18 @@ public class Mensagem {
     @Column(columnDefinition = "TEXT")
     private String conteudo;
 
-    private String enviadoPor;
+    private String enviadoPor; // "CLIENTE", "TECNICO", "BOT"
 
     private LocalDateTime dataHora;
 
-    @Transient // Fundamental: o Render não vai tentar criar essa coluna no banco
+    @Transient // Informação visual para o adapter do Android, não vai para o banco
     private String tipoRemetente;
 
     public Mensagem() {
         this.dataHora = LocalDateTime.now();
     }
 
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

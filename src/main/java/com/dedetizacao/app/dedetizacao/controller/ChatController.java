@@ -24,26 +24,26 @@ public class ChatController {
 
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
-        String textoLimpo = mensagem.getConteudo() != null ? mensagem.getConteudo().trim() : "";
         String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
 
-        // Gatilho Oculto: Abertura da Tela
-        if (textoLimpo.equals("[START_BOT]")) {
+        // Se for o comando de inicialização automática do Android
+        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
             return;
         }
 
-        // Salva a mensagem do humano
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
-        mensagem.setTipoRemetente("Humano");
 
+        // Salva a mensagem recebida do usuário logado
         Mensagem mensagemSalva = mensagemRepository.save(mensagem);
         messagingTemplate.convertAndSend(topicoCanal, mensagemSalva);
 
-        // IA Básica / Máquina de Estados do PestBot
-        processarComandoBot(textoLimpo, empresaId, clienteId);
+        // Processa a inteligência do PestBot baseado no texto limpo
+        if (mensagem.getConteudo() != null) {
+            processarComandoBot(mensagem.getConteudo().trim(), empresaId, clienteId);
+        }
     }
 
     private void processarComandoBot(String comando, Long empresaId, Long clienteId) {
