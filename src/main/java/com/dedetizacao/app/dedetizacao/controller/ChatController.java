@@ -56,15 +56,19 @@ public class ChatController {
         Mensagem respostaBot = new Mensagem();
         respostaBot.setEmpresaId(empresaId);
         respostaBot.setClienteId(clienteId);
-        respostaBot.setRemetenteId(null); // Null indica que foi o sistema/bot (não um id físico)
-        respostaBot.setDestinatarioId(usuarioClienteId);
+        
+        respostaBot.setRemetenteId(empresaId);
+        respostaBot.setDestinatarioId(clienteId);
+
         respostaBot.setConteudo(conteudoBot);
         respostaBot.setDataHora(LocalDateTime.now());
-
-        // 🚨 CHAVE PARA O ANDROID ABRIR O POP-UP:
         respostaBot.setTipoRemetente("PestBot");
 
-        mensagemRepository.save(respostaBot);
+        try {
+            mensagemRepository.save(respostaBot); // Agora o banco vai aceitar!
+        } catch (Exception e) {
+            System.err.println("Erro ao salvar mensagem do Bot (Ignorando para não travar o socket): " + e.getMessage());
+        }
 
         String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
         messagingTemplate.convertAndSend(topicoCanal, respostaBot);
