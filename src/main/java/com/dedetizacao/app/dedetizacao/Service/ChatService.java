@@ -2,16 +2,19 @@ package com.dedetizacao.app.dedetizacao.Service;
 
 import com.dedetizacao.app.dedetizacao.Model.Mensagem;
 import com.dedetizacao.app.dedetizacao.Repository.MensagemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ChatService {
+    private final MensagemRepository repository;
 
-    @Autowired
-    private MensagemRepository mensagemRepository;
+    public ChatService(MensagemRepository repository) {
+        this.repository = repository;
+    }
 
-    public Mensagem salvarMensagem(Mensagem mensagem) {
-        return mensagemRepository.save(mensagem);
+    public List<Mensagem> buscarHistorico(Long empresaId, Long clienteId) {
+        return repository.findByEmpresaIdAndClienteId(empresaId, clienteId);
     }
 }
