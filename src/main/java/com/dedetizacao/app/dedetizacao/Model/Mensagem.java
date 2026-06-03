@@ -11,7 +11,8 @@ public class Mensagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "remetente_id", nullable = false)
+    // Alterado para nullable = true para suportar o ID do PestBot sem quebrar Foreign Keys
+    @Column(name = "remetente_id", nullable = true)
     private Long remetenteId;
 
     @Column(name = "destinatario_id", nullable = false)
@@ -33,18 +34,33 @@ public class Mensagem {
         this.dataHora = LocalDateTime.now();
     }
 
-
     public void setTexto(String texto) {
         this.conteudo = texto;
     }
 
+    // Identificador string amigável para o App Android ("PestBot" ou "Humano")
+    @Transient // Não salva no banco de dados
+    private String tipoRemetente;
+
+    public String getTipoRemetente() {
+        return tipoRemetente;
+    }
+
+    public void setTipoRemetente(String tipoRemetente) {
+        this.tipoRemetente = tipoRemetente;
+    }
+
     public void setRemetente(String remetente) {
-        // Como o controller passa uma String, tentamos converter para Long.
-        // Se for um texto tipo "BOT", definimos um ID padrão (ex: 0L) para não quebrar o banco.
-        try {
-            this.remetenteId = Long.parseLong(remetente);
-        } catch (NumberFormatException e) {
-            this.remetenteId = 0L;
+        if ("BOT".equalsIgnoreCase(remetente) || "PestBot".equalsIgnoreCase(remetente)) {
+            this.remetenteId = null;
+            this.tipoRemetente = "PestBot";
+        } else {
+            try {
+                this.remetenteId = Long.parseLong(remetente);
+                this.tipoRemetente = "Humano";
+            } catch (NumberFormatException e) {
+                this.remetenteId = null; // Trata erro sem forçar ID falso
+            }
         }
     }
 

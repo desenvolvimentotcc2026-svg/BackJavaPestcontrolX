@@ -18,31 +18,23 @@ public class ChatController {
     private final MensagemRepository mensagemRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    // Injeção do template para disparar respostas em paralelo sem travar a thread principal
     public ChatController(MensagemRepository mensagemRepository, SimpMessagingTemplate messagingTemplate) {
         this.mensagemRepository = mensagemRepository;
         this.messagingTemplate = messagingTemplate;
     }
 
-    // 1. ROTA WEBSOCKET (Interação em Tempo Real com Interceptor PestBot 🤖)
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     @SendTo("/topic/chat/{empresaId}/{clienteId}")
     public Mensagem rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
+        mensagem.setTipoRemetente("Humano"); // Marca a msg que acabou de chegar como humana
 
-        // Alerta Importante: Garanta que o Objeto 'mensagem' enviado pelo Front-end (App Android/Web)
-        // contenha um 'remetenteId' e 'destinatarioId' que REALMENTE existam na tabela 'usuarios'.
-        // Se o front estiver passando o ID da Empresa (Ex: 1) no campo destinatarioId, e não houver um Usuário com ID 1, o Hibernate quebrará.
-
-        // Salva a mensagem que o usuário digitou (Cliente ou Técnico) no banco
         Mensagem mensagemSalva = mensagemRepository.save(mensagem);
 
-        // Análise do conteúdo para ativação de comandos numéricos do PestBot (1, 2, 3, 4, 5)
         String textoLimpo = mensagem.getConteudo() != null ? mensagem.getConteudo().trim() : "";
 
-        // Passamos o mensagem.getRemetenteId() para sabermos quem deve receber a resposta do Bot de volta
         if (textoLimpo.equalsIgnoreCase("menu") || textoLimpo.equalsIgnoreCase("ajuda") || textoLimpo.equalsIgnoreCase("bot")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal(), mensagem.getRemetenteId());
         } else if (textoLimpo.equals("1")) {
@@ -60,34 +52,24 @@ public class ChatController {
         return mensagemSalva;
     }
 
-    /**
-     * Constrói e encaminha a mensagem automatizada do robô para o barramento WebSocket
-     */
     private void dispararRespostaBot(Long empresaId, Long clienteId, String conteudoBot, Long usuarioClienteId) {
         Mensagem respostaBot = new Mensagem();
         respostaBot.setEmpresaId(empresaId);
         respostaBot.setClienteId(clienteId);
-
-        // Regra de Integridade: ID 0L é o PESTBOT. Ele PRECISA existir na tabela 'usuarios' do seu Banco de Dados.
-        respostaBot.setRemetenteId(0L);
-
-        // O destinatário do Bot será o ID de usuário do cliente que interagiu
+        respostaBot.setRemetenteId(null); // Null indica que foi o sistema/bot (não um id físico)
         respostaBot.setDestinatarioId(usuarioClienteId);
-
-        // CORREÇÃO: Alterado de setTexto() para setConteudo() para bater com a propriedade da sua Entidade!
         respostaBot.setConteudo(conteudoBot);
         respostaBot.setDataHora(LocalDateTime.now());
 
-        // Mantém a integridade do histórico guardando a resposta do Bot na tabela do banco
+        // 🚨 CHAVE PARA O ANDROID ABRIR O POP-UP:
+        respostaBot.setTipoRemetente("PestBot");
+
         mensagemRepository.save(respostaBot);
 
-        // Alimenta o barramento em tempo real - a empresa e o cliente recebem simultaneamente
         String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
         messagingTemplate.convertAndSend(topicoCanal, respostaBot);
         System.out.println("--> [PESTBOT] Resposta automática injetada com sucesso no canal: " + topicoCanal);
     }
-
-    // --- TEXTOS CORPORATIVOS DE NÍVEL SÊNIOR E CONFORMIDADE ---
 
     private String obterMenuPrincipal() {
         return "🤖 **[PestBot - SUPORTE OPERACIONAL VIRTUAL]**\n\n" +
@@ -142,7 +124,6 @@ public class ChatController {
                 "Permaneça no chat, o especialista assumirá a digitação humana em instantes! 🟢";
     }
 
-    // 2. ROTA REST (Histórico das conversas)
     @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
     public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
         return mensagemRepository.findByEmpresaIdAndClienteId(empresaId, clienteId);
