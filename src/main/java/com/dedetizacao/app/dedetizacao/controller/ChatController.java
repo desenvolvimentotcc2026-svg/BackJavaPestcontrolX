@@ -56,7 +56,7 @@ public class ChatController {
         Mensagem respostaBot = new Mensagem();
         respostaBot.setEmpresaId(empresaId);
         respostaBot.setClienteId(clienteId);
-        
+
         respostaBot.setRemetenteId(empresaId);
         respostaBot.setDestinatarioId(clienteId);
 
