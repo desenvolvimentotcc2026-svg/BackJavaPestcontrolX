@@ -11,7 +11,6 @@ public class Mensagem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Campos que batem exatamente com o JSON enviado pelo Android
     private Long remetenteId;
     private Long destinatarioId;
     private Long empresaId;
@@ -20,16 +19,19 @@ public class Mensagem {
     @Column(columnDefinition = "TEXT")
     private String conteudo;
 
-    private String enviadoPor; // Ex: "CLIENTE", "TECNICO", "BOT"
+    private String enviadoPor; // Mapeia o envio vindo do Android
 
     private LocalDateTime dataHora;
 
-    // Construtor vazio obrigatório para o JPA
+    // Resolve o erro do ChatController e mantém o mapeamento do app Android
+    @Transient // Não cria coluna no banco, mas vai na serialização JSON
+    private String tipoRemetente;
+
     public Mensagem() {
         this.dataHora = LocalDateTime.now();
     }
 
-    // Getters e Setters Padrões (Jackson usa isso para montar o objeto)
+    // Getters e Setters Padrões
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -53,4 +55,8 @@ public class Mensagem {
 
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+
+    // Getters e Setters para o ChatController conseguir compilar
+    public String getTipoRemetente() { return tipoRemetente; }
+    public void setTipoRemetente(String tipoRemetente) { this.tipoRemetente = tipoRemetente; }
 }
