@@ -25,10 +25,9 @@ public class ChatController {
 
     /**
      * ENDPOINT DE HANDOVER - REST API
-     * Disparado pelo painel administrativo web da empresa para redirecionar o cliente
-     * e despachar a ordem de serviço em tempo real no barramento de dados do Técnico.
+     * Alterado para /api/chat/... para evitar conflito com o NotificationController
      */
-    @PostMapping("/api/notifications/trigger-acceptance")
+    @PostMapping("/api/chat/trigger-acceptance")
     public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(
             @RequestParam Long clienteId,
             @RequestParam Long ordemId) {
@@ -66,12 +65,10 @@ public class ChatController {
 
     /**
      * ROTEADOR WEBSOCKET (STOMP)
-     * Gerencia a árvore de decisão do PestBot e o tráfego de mensagens em tempo real.
      */
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
 
-        // GATILHO 1: O chat abriu, o app manda [START_BOT] -> Exige o aceite
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "⚡ **SISTEMA PESTCONTROLX ACCESSED**\n\n" +
@@ -81,7 +78,6 @@ public class ChatController {
             return;
         }
 
-        // GATILHO 2: Usuário marcou o Checkbox de Aceite no Android
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
@@ -89,16 +85,14 @@ public class ChatController {
             return;
         }
 
-        // Processamento básico e auditoria de mensagens normais do chat
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
         mensagemRepository.save(mensagem);
 
         if (mensagem.getConteudo() == null) return;
-        String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
+        String textoUsuario = message.getConteudo().trim().toUpperCase();
 
-        // Árvore de comandos estruturada do menu interativo (PestBot)
         if (textoUsuario.equals("MENU")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
         } else if (textoUsuario.equals("1")) {
@@ -115,14 +109,12 @@ public class ChatController {
                             "🔗 " + linkOrdem + "\n\n" +
                             "Após o preenchimento, o console do Técnico de Campo será alertado em tempo real!");
         } else {
-            // Se não for um comando do bot, apenas transmite para o canal (comunicação humana fluida)
             messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, mensagem);
         }
     }
 
     /**
      * RECUPERAÇÃO DE HISTÓRICO - REST API
-     * Retorna as últimas 50 mensagens trocadas de forma limpa e unificada.
      */
     @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
     public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
@@ -156,12 +148,12 @@ public class ChatController {
         return "🏢 **PESTCONTROLX TECH CO.**\n\n" +
                 "Líder em manejo ecológico integrado de vetores biológicos urbanos.\n" +
                 "• **Licença Sanitária:** Ativa via ANVISA\n" +
-                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambiental.";
+                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambientall.";
     }
 
     private String obterCatalogoPragas() {
         return "☣️ **CATÁLOGO DE DEFESA BIOLÓGICA**\n\n" +
-                "Táticas de choque químico disponíveis para:\n" +
+                "Táticas de choque químico disponíveis para:\\n" +
                 "• *Blatella germanica* (Baratas de Esgoto)\n" +
                 "• *Rattus norvegicus* (Roedores / Desratização Estática)\n" +
                 "• *Tityus serrulatus* (Escorpiões / Barreiras Químicas)";
