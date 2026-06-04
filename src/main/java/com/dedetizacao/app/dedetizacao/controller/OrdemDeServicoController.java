@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/ordens") // Escopo isolado do Kanban, GPS e Técnicos
@@ -20,6 +21,7 @@ public class OrdemDeServicoController {
 
     private final OrdemDeServicoService service;
     private final MensagemRepository mensagemRepository;
+    private final OrdemDeServicoRepository ordemRepository;
 
     @Autowired
     private NotificationService notificationService;
@@ -27,9 +29,10 @@ public class OrdemDeServicoController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public OrdemDeServicoController(OrdemDeServicoService service, MensagemRepository mensagemRepository) {
+    public OrdemDeServicoController(OrdemDeServicoService service, MensagemRepository mensagemRepository, (OrdemDeServicoRepository ordemRepository) {
         this.service = service;
         this.mensagemRepository = mensagemRepository;
+        this.ordemRepository = ordemRepository;
     }
 
     @PostMapping("/criar")
