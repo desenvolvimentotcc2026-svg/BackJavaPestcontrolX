@@ -32,6 +32,16 @@ public class OrdemDeServicoController {
         this.mensagemRepository = mensagemRepository;
     }
 
+    @PostMapping("/criar")
+    public ResponseEntity<OrdemDeServico> criarOrdem(@RequestBody OrdemDeServico novaOrdem) {
+
+        novaOrdem.setDataAbertura(LocalDateTime.now());
+        novaOrdem.setStatus("ABERTA"); // Inicia na esteira operacional de triagem
+
+        OrdemDeServico salva = ordemRepository.save(novaOrdem);
+        return ResponseEntity.ok(salva);
+    }
+
     @GetMapping("/empresa/{empresaId}")
     public ResponseEntity<List<OrdemDeServico>> listarPorEmpresa(@PathVariable Long empresaId) {
         List<OrdemDeServico> filtradas = service.listar().stream()

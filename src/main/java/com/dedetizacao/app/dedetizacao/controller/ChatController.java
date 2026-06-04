@@ -23,116 +23,58 @@ public class ChatController {
         this.messagingTemplate = messagingTemplate;
     }
 
-    /**
-     * ENDPOINT DE HANDOVER - REST API
-     * Alterado para /api/chat/... para evitar conflito com o NotificationController
-     */
-    @PostMapping("/api/chat/trigger-acceptance")
-    public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(
-            @RequestParam Long clienteId,
-            @RequestParam Long ordemId) {
-
-        Long empresaIdPadrao = 42L;
-
-        // 1. Prepara e envia o comando de redirecionamento invisível para o Cliente via WebSocket
-        Mensagem redirectMsg = new Mensagem();
-        redirectMsg.setEmpresaId(empresaIdPadrao);
-        redirectMsg.setClienteId(clienteId);
-        redirectMsg.setRemetenteId(null);
-        redirectMsg.setDestinatarioId(clienteId);
-        redirectMsg.setConteudo("[REDIRECT_TO_DASHBOARD]");
-        redirectMsg.setEnviadoPor("SISTEMA");
-        redirectMsg.setDataHora(LocalDateTime.now());
-
-        mensagemRepository.save(redirectMsg);
-
-        String topicoCanalCliente = "/topic/chat/" + empresaIdPadrao + "/" + clienteId;
-        messagingTemplate.convertAndSend(topicoCanalCliente, redirectMsg);
-
-        // 2. Prepara e dispara o alerta imediato no canal do Técnico associado
-        Mensagem tecnicoMsg = new Mensagem();
-        tecnicoMsg.setEmpresaId(empresaIdPadrao);
-        tecnicoMsg.setClienteId(clienteId);
-        tecnicoMsg.setConteudo("[NOVA_ORDEM_ATRIBUIDA]:" + ordemId);
-        tecnicoMsg.setEnviadoPor("SISTEMA");
-        tecnicoMsg.setDataHora(LocalDateTime.now());
-
-        String topicoCanalTecnico = "/topic/tecnico/99";
-        messagingTemplate.convertAndSend(topicoCanalTecnico, tecnicoMsg);
-
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * ROTEADOR WEBSOCKET (STOMP)
-     */
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
+        String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
 
-        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
-            dispararRespostaBot(empresaId, clienteId,
-                    "⚡ **SISTEMA PESTCONTROLX ACCESSED**\n\n" +
-                            "Bem-vindo ao canal cibernético de triagem automatizada!\n" +
-                            "Para iniciar o suporte e rotear sua Ordem de Serviço, você precisa ler e aceitar nossos Termos de Monitoramento Biológico e LGPD.\n\n" +
-                            "⚠️ *Por favor, marque a caixa de seleção abaixo para liberar o painel.*");
-            return;
-        }
-
-        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
-            dispararRespostaBot(empresaId, clienteId,
-                    "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
-                            "Painel destravado. Digite **MENU** a qualquer momento para ver nossas opções de defesa.");
-            return;
-        }
-
-        mensagem.setEmpresaId(empresaId);
-        mensagem.setClienteId(clienteId);
-        mensagem.setDataHora(LocalDateTime.now());
-        mensagemRepository.save(mensagem);
-
-        if (mensagem.getConteudo() == null) return;
-        String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
-
-        if (textoUsuario.equals("MENU")) {
+        if (mensagem.getConteudo() != null && mensagem.getConteudo().equalsIgnoreCase("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
-        } else if (textoUsuario.equals("1")) {
-            dispararRespostaBot(empresaId, clienteId, obterInstitucional());
-        } else if (textoUsuario.equals("2")) {
-            dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas());
-        } else if (textoUsuario.equals("3")) {
-            dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
-        } else if (textoUsuario.equals("4")) {
-            String linkOrdem = "https://pestcontrolx-web.onrender.com/form-ordem.html?clienteId=" + clienteId + "&empresaId=" + empresaId;
-            dispararRespostaBot(empresaId, clienteId,
-                    "📝 **DIRECIONAMENTO - FORMULÁRIO DE ORDEM DE SERVIÇO**\n\n" +
-                            "Para gerar e formalizar sua O.S. no ecossistema digital, clique no link oficial abaixo para preencher os dados do foco de pragas:\n\n" +
-                            "🔗 " + linkOrdem + "\n\n" +
-                            "Após o preenchimento, o console do Técnico de Campo será alertado em tempo real!");
-        } else {
-            messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, mensagem);
+            return;
         }
-    }
 
-    /**
-     * RECUPERAÇÃO DE HISTÓRICO - REST API
-     */
-    @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
-    public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
-        return mensagemRepository.findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(empresaId, clienteId);
+        if (mensagem.getConteudo() != null && mensagem.getConteudo().equalsIgnoreCase("[ACEITOU_TERMOS]")) {
+            mensagem.setDataEnvio(LocalDateTime.now());
+            mensagemRepository.save(mensagem);
+            return;
+        }
+
+        // Processamento de opções do Menu do Bot
+        String input = mensagem.getConteudo() != null ? mensagem.getConteudo().trim() : "";
+
+        switch (input) {
+            case "1":
+                dispararRespostaBot(empresaId, clienteId, obterInstitucional());
+                break;
+            case "2":
+                dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas());
+                break;
+            case "3":
+                dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
+                break;
+            case "4":
+                // Dispara o comando invisível interceptado nativamente pelo Android
+                dispararRespostaBot(empresaId, clienteId, "[ABRIR_FORMULARIO_NATIVO]");
+                break;
+            default:
+                // Tráfego normal entre Humanos (Cliente/Técnico) - persiste e encaminha
+                mensagem.setDataEnvio(LocalDateTime.now());
+                Mensagem salva = mensagemRepository.save(mensagem);
+                messagingTemplate.convertAndSend(topicoCanal, salva);
+                break;
+        }
     }
 
     private void dispararRespostaBot(Long empresaId, Long clienteId, String textoBot) {
-        Mensagem botMsg = new Mensagem();
-        botMsg.setEmpresaId(empresaId);
-        botMsg.setClienteId(clienteId);
-        botMsg.setRemetenteId(null);
-        botMsg.setDestinatarioId(clienteId);
-        botMsg.setConteudo(textoBot);
-        botMsg.setEnviadoPor("BOT");
-        botMsg.setDataHora(LocalDateTime.now());
+        Mensagem respostaBot = new Mensagem();
+        respostaBot.setEmpresaId(empresaId);
+        respostaBot.setClienteId(clienteId);
+        respostaBot.setConteudo(textoBot);
+        respostaBot.setTipoRemetente("BOT");
+        respostaBot.setRemetenteId(0L);
+        respostaBot.setDataEnvio(LocalDateTime.now());
 
-        mensagemRepository.save(botMsg);
-        messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, botMsg);
+        mensagemRepository.save(respostaBot);
+        messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, respostaBot);
     }
 
     private String obterMenuPrincipal() {
@@ -141,19 +83,19 @@ public class ChatController {
                 "🔹 **1** - Credenciais Corporativas (Institucional)\n" +
                 "🔹 **2** - Catálogo Químico e Pragas Alvo\n" +
                 "🔹 **3** - Link de Telemetria GPS do Técnico\n" +
-                "🔹 **4** - **Formar Nova Ordem de Serviço (WEB)**";
+                "🔹 **4** - **Abrir Formulário de Ordem de Serviço NATIVO**";
     }
 
     private String obterInstitucional() {
         return "🏢 **PESTCONTROLX TECH CO.**\n\n" +
                 "Líder em manejo ecológico integrado de vetores biológicos urbanos.\n" +
                 "• **Licença Sanitária:** Ativa via ANVISA\n" +
-                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambientall.";
+                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambiental.";
     }
 
     private String obterCatalogoPragas() {
         return "☣️ **CATÁLOGO DE DEFESA BIOLÓGICA**\n\n" +
-                "Táticas de choque químico disponíveis para:\\n" +
+                "Táticas de choque químico disponíveis para:\n" +
                 "• *Blatella germanica* (Baratas de Esgoto)\n" +
                 "• *Rattus norvegicus* (Roedores / Desratização Estática)\n" +
                 "• *Tityus serrulatus* (Escorpiões / Barreiras Químicas)";
@@ -162,5 +104,25 @@ public class ChatController {
     private String obterRastreamentoGPS() {
         return "🛰️ **MÓDULO DE TELEMETRIA GPS**\n\n" +
                 "Conexão de satélite pronta para pareamento. Assim que o técnico iniciar a rota no painel dele, o radar do seu app notificará o deslocamento.";
+    }
+
+    @PostMapping("/api/chat/trigger-acceptance")
+    public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(@RequestParam Long clienteId, @RequestParam Long ordemId) {
+        Long empresaIdPadrao = 42L;
+
+        Mensagem redirectMsg = new Mensagem();
+        redirectMsg.setEmpresaId(empresaIdPadrao);
+        redirectMsg.setClienteId(clienteId);
+        redirectMsg.setConteudo("[REDIRECT_DASHBOARD]");
+        redirectMsg.setTipoRemetente("SYSTEM");
+        redirectMsg.setDataEnvio(LocalDateTime.now());
+
+        messagingTemplate.convertAndSend("/topic/chat/" + empresaIdPadrao + "/" + clienteId, redirectMsg);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
+    public List<Mensagem> obterHistoricoChat(@PathVariable Long empresaId, @PathVariable Long clienteId) {
+        return mensagemRepository.findByEmpresaIdAndClienteIdOrderByDataEnvioAsc(empresaId, clienteId);
     }
 }
