@@ -24,8 +24,9 @@ public class ChatController {
     }
 
     /**
-     * ENDPOINT DE HANDOVER - DISPARADO PELA INTERFACE WEB DA EMPRESA
-     * Alerta o cliente para ir para a Dashboard e despacha a O.S. para o painel do Técnico.
+     * ENDPOINT DE HANDOVER - REST API
+     * Disparado pelo painel administrativo web da empresa para redirecionar o cliente
+     * e despachar a ordem de serviço em tempo real no barramento de dados do Técnico.
      */
     @PostMapping("/api/notifications/trigger-acceptance")
     public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(
@@ -35,7 +36,7 @@ public class ChatController {
 
         Long empresaIdPadrao = 42L;
 
-        // 1. Prepara e envia o comando de fuga invisível para o Cliente via WebSocket
+        // 1. Prepara e envia o comando de redirecionamento invisível para o Cliente via WebSocket
         Mensagem redirectMsg = new Mensagem();
         redirectMsg.setEmpresaId(empresaIdPadrao);
         redirectMsg.setClienteId(clienteId);
@@ -45,14 +46,12 @@ public class ChatController {
         redirectMsg.setEnviadoPor("SISTEMA");
         redirectMsg.setDataHora(LocalDateTime.now());
 
-        // Salva o log do evento no banco de dados
         mensagemRepository.save(redirectMsg);
 
-        // Publica no canal específico do cliente
         String topicoCanalCliente = "/topic/chat/" + empresaIdPadrao + "/" + clienteId;
         messagingTemplate.convertAndSend(topicoCanalCliente, redirectMsg);
 
-        // 2. Prepara e dispara o alerta imediato no barramento de dados do Técnico
+        // 2. Prepara e dispara o alerta imediato no canal do Técnico associado
         Mensagem tecnicoMsg = new Mensagem();
         tecnicoMsg.setEmpresaId(empresaIdPadrao);
         tecnicoMsg.setClienteId(clienteId);
@@ -66,8 +65,14 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * ROTEADOR WEBSOCKET (STOMP)
+     * Gerencia a árvore de decisão do PestBot e o tráfego de mensagens em tempo real.
+     */
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
+
+        // Fluxo de Inicialização Autônoma do Chat
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "⚡ **SISTEMA PESTCONTROLX ACCESSED**\n\n" +
@@ -77,14 +82,15 @@ public class ChatController {
             return;
         }
 
-        // CORRIGIDO: Removido o bug do 'mensaje' que quebrava a compilação do projeto
-        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
+        // Fluxo de Aceite dos Termos de Serviço via interface móvel
+        if (mensagem.getConteudo() != null && message.getConteudo().equals("[ACEITOU_TERMOS]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
                             "Painel destravado. Digite **MENU** a qualquer momento para ver nossas opções de defesa.");
             return;
         }
 
+        // Processamento básico e auditoria de mensagens normais
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
@@ -93,6 +99,7 @@ public class ChatController {
         if (mensagem.getConteudo() == null) return;
         String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
 
+        // Árvore de comandos estruturada do menu interativo
         if (textoUsuario.equals("MENU")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
         } else if (textoUsuario.equals("1")) {
@@ -111,6 +118,16 @@ public class ChatController {
         } else {
             dispararRespostaBot(empresaId, clienteId, "🤖 Comando não reconhecido. Digite **MENU** para reiniciar a triagem.");
         }
+    }
+
+    /**
+     * RECUPERAÇÃO DE HISTÓRICO - REST API
+     * Retorna as últimas 50 mensagens trocadas entre o cliente e a corporação.
+     * (Mantido estritamente de forma única para sanar o erro de Ambiguous Mapping)
+     */
+    @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
+    public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
+        return mensagemRepository.findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(empresaId, clienteId);
     }
 
     private void dispararRespostaBot(Long empresaId, Long clienteId, String textoBot) {
@@ -140,7 +157,7 @@ public class ChatController {
         return "🏢 **PESTCONTROLX TECH CO.**\n\n" +
                 "Líder em manejo ecológico integrado de vetores biológicos urbanos.\n" +
                 "• **Licença Sanitária:** Ativa via ANVISA\n" +
-                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambientado.";
+                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambiental.";
     }
 
     private String obterCatalogoPragas() {
@@ -154,10 +171,5 @@ public class ChatController {
     private String obterRastreamentoGPS() {
         return "🛰️ **MÓDULO DE TELEMETRIA GPS**\n\n" +
                 "Conexão de satélite pronta para pareamento. Assim que o técnico iniciar a rota no painel dele, o radar do seu app notificará o deslocamento.";
-    }
-
-    @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
-    public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
-        return mensagemRepository.findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(empresaId, clienteId);
     }
 }
