@@ -20,4 +20,6 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
     long countByRemetenteIdAndDestinatarioId(Long remetenteId, Long destinatarioId);
 
     List<Mensagem> findByEmpresaIdAndClienteId(Long empresaId, Long clienteId);
+
+    List<Mensagem> findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(Long empresaId, Long clienteId);
 }
