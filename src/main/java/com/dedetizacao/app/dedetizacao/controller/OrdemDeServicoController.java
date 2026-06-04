@@ -29,7 +29,7 @@ public class OrdemDeServicoController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    public OrdemDeServicoController(OrdemDeServicoService service, MensagemRepository mensagemRepository, (OrdemDeServicoRepository ordemRepository) {
+    public OrdemDeServicoController(OrdemDeServicoService service, MensagemRepository mensagemRepository,OrdemDeServicoRepository ordemRepository) {
         this.service = service;
         this.mensagemRepository = mensagemRepository;
         this.ordemRepository = ordemRepository;
