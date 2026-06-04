@@ -83,7 +83,7 @@ public class ChatController {
         }
 
         // Fluxo de Aceite dos Termos de Serviço via interface móvel
-        if (mensagem.getConteudo() != null && message.getConteudo().equals("[ACEITOU_TERMOS]")) {
+        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
                             "Painel destravado. Digite **MENU** a qualquer momento para ver nossas opções de defesa.");
