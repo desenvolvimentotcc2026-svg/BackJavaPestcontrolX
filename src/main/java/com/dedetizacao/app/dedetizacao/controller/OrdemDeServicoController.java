@@ -5,6 +5,7 @@ import com.dedetizacao.app.dedetizacao.Service.OrdemDeServicoService;
 import com.dedetizacao.app.dedetizacao.Repository.MensagemRepository;
 import com.dedetizacao.app.dedetizacao.Service.NotificationService;
 import com.dedetizacao.app.dedetizacao.controller.NotificationController;
+import com.dedetizacao.app.dedetizacao.Repository.OrdemDeServicoRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
