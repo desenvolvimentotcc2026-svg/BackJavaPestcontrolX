@@ -23,5 +23,5 @@ public interface MensagemRepository extends JpaRepository<Mensagem, Long> {
 
     List<Mensagem> findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(Long empresaId, Long clienteId);
 
-    List<Mensagem> findByEmpresaIdAndClienteIdOrderByDataEnvioAsc(Long empresaId, Long clienteId)
+    List<Mensagem> findByEmpresaIdAndClienteIdOrderByDataEnvioAsc(Long empresaId, Long clienteId);
 }
