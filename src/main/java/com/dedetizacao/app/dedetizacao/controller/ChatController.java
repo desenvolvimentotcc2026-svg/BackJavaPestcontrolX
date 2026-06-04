@@ -6,6 +6,7 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,136 +23,141 @@ public class ChatController {
         this.messagingTemplate = messagingTemplate;
     }
 
+    /**
+     * ENDPOINT DE HANDOVER - DISPARADO PELA INTERFACE WEB DA EMPRESA
+     * Alerta o cliente para ir para a Dashboard e despacha a O.S. para o painel do Técnico.
+     */
+    @PostMapping("/api/notifications/trigger-acceptance")
+    public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(
+            @RequestParam Long clienteId,
+            @RequestParam Long ordemId,
+            @RequestParam(defaultValue = "99") Long tecnicoId) {
+
+        Long empresaIdPadrao = 42L;
+
+        // 1. Prepara e envia o comando de fuga invisível para o Cliente via WebSocket
+        Mensagem redirectMsg = new Mensagem();
+        redirectMsg.setEmpresaId(empresaIdPadrao);
+        redirectMsg.setClienteId(clienteId);
+        redirectMsg.setRemetenteId(null);
+        redirectMsg.setDestinatarioId(clienteId);
+        redirectMsg.setConteudo("[REDIRECT_TO_DASHBOARD]");
+        redirectMsg.setEnviadoPor("SISTEMA");
+        redirectMsg.setDataHora(LocalDateTime.now());
+
+        // Salva o log do evento no banco de dados
+        mensagemRepository.save(redirectMsg);
+
+        // Publica no canal específico do cliente
+        String topicoCanalCliente = "/topic/chat/" + empresaIdPadrao + "/" + clienteId;
+        messagingTemplate.convertAndSend(topicoCanalCliente, redirectMsg);
+
+        // 2. Prepara e dispara o alerta imediato no barramento de dados do Técnico
+        Mensagem tecnicoMsg = new Mensagem();
+        tecnicoMsg.setEmpresaId(empresaIdPadrao);
+        tecnicoMsg.setClienteId(clienteId);
+        tecnicoMsg.setConteudo("[NOVA_ORDEM_ATRIBUIDA]:" + ordemId);
+        tecnicoMsg.setEnviadoPor("SISTEMA");
+        tecnicoMsg.setDataHora(LocalDateTime.now());
+
+        String topicoCanalTecnico = "/topic/tecnico/" + tecnicoId;
+        messagingTemplate.convertAndSend(topicoCanalTecnico, tecnicoMsg);
+
+        return ResponseEntity.ok().build();
+    }
+
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
-        String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
-
-        // Se for o comando de inicialização automática do Android
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
-            dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
+            dispararRespostaBot(empresaId, clienteId,
+                    "⚡ **SISTEMA PESTCONTROLX ACCESSED**\n\n" +
+                            "Bem-vindo ao canal cibernético de triagem automatizada!\n" +
+                            "Para iniciar o suporte e rotear sua Ordem de Serviço, você precisa ler e aceitar nossos Termos de Monitoramento Biológico e LGPD.\n\n" +
+                            "⚠️ *Por favor, marque a caixa de seleção abaixo para liberar o painel.*");
+            return;
+        }
+
+        // CORRIGIDO: Removido o bug do 'mensaje' que quebrava a compilação do projeto
+        if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
+            dispararRespostaBot(empresaId, clienteId,
+                    "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
+                            "Painel destravado. Digite **MENU** a qualquer momento para ver nossas opções de defesa.");
             return;
         }
 
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
+        mensagemRepository.save(mensagem);
 
-        // Salva a mensagem recebida do usuário logado
-        Mensagem mensagemSalva = mensagemRepository.save(mensagem);
-        messagingTemplate.convertAndSend(topicoCanal, mensagemSalva);
+        if (mensagem.getConteudo() == null) return;
+        String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
 
-        // Processa a inteligência do PestBot baseado no texto limpo
-        if (mensagem.getConteudo() != null) {
-            processarComandoBot(mensagem.getConteudo().trim(), empresaId, clienteId);
+        if (textoUsuario.equals("MENU")) {
+            dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
+        } else if (textoUsuario.equals("1")) {
+            dispararRespostaBot(empresaId, clienteId, obterInstitucional());
+        } else if (textoUsuario.equals("2")) {
+            dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas());
+        } else if (textoUsuario.equals("3")) {
+            dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
+        } else if (textoUsuario.equals("4")) {
+            String linkOrdem = "https://pestcontrolx-web.onrender.com/form-ordem.html?clienteId=" + clienteId + "&empresaId=" + empresaId;
+            dispararRespostaBot(empresaId, clienteId,
+                    "📝 **DIRECIONAMENTO - FORMULÁRIO DE ORDEM DE SERVIÇO**\n\n" +
+                            "Para gerar e formalizar sua O.S. no ecossistema digital, clique no link oficial abaixo para preencher os dados do foco de pragas:\n\n" +
+                            "🔗 " + linkOrdem + "\n\n" +
+                            "Após o preenchimento, o console do Técnico de Campo será alertado em tempo real!");
+        } else {
+            dispararRespostaBot(empresaId, clienteId, "🤖 Comando não reconhecido. Digite **MENU** para reiniciar a triagem.");
         }
     }
 
-    private void processarComandoBot(String comando, Long empresaId, Long clienteId) {
-        comando = comando.toLowerCase();
+    private void dispararRespostaBot(Long empresaId, Long clienteId, String textoBot) {
+        Mensagem botMsg = new Mensagem();
+        botMsg.setEmpresaId(empresaId);
+        botMsg.setClienteId(clienteId);
+        botMsg.setRemetenteId(null);
+        botMsg.setDestinatarioId(clienteId);
+        botMsg.setConteudo(textoBot);
+        botMsg.setEnviadoPor("BOT");
+        botMsg.setDataHora(LocalDateTime.now());
 
-        switch (comando) {
-            case "menu":
-            case "ajuda":
-            case "bot":
-                dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
-                break;
-            case "1":
-                dispararRespostaBot(empresaId, clienteId, obterTermosLGPD());
-                break;
-            case "2":
-                dispararRespostaBot(empresaId, clienteId, obterLicenciamentoAmbiental());
-                break;
-            case "3":
-                dispararRespostaBot(empresaId, clienteId, obterCatalogoPragas());
-                break;
-            case "4":
-                dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
-                break;
-            case "5":
-                dispararRespostaBot(empresaId, clienteId, obterSuporteHumano());
-                break;
-            default:
-                // Resposta inteligente para comandos não reconhecidos
-                if(comando.length() == 1) {
-                    dispararRespostaBot(empresaId, clienteId, "⚠️ **ERRO DE SINTAXE**\nComando '" + comando + "' não reconhecido pelo terminal. Digite **MENU** para reiniciar a interface de suporte.");
-                }
-                break;
-        }
+        mensagemRepository.save(botMsg);
+        messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, botMsg);
     }
-
-    private void dispararRespostaBot(Long empresaId, Long clienteId, String conteudoBot) {
-        Mensagem respostaBot = new Mensagem();
-        respostaBot.setEmpresaId(empresaId);
-        respostaBot.setClienteId(clienteId);
-        respostaBot.setRemetenteId(empresaId);
-        respostaBot.setDestinatarioId(clienteId);
-        respostaBot.setConteudo(conteudoBot);
-        respostaBot.setDataHora(LocalDateTime.now());
-        respostaBot.setEnviadoPor("BOT");
-        respostaBot.setTipoRemetente("BOT");
-
-        try {
-            mensagemRepository.save(respostaBot);
-        } catch (Exception e) {
-            System.err.println("WARN: Falha ao persistir log do bot -> " + e.getMessage());
-        }
-
-        String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
-        messagingTemplate.convertAndSend(topicoCanal, respostaBot);
-    }
-
-    // ---------------- TEXTOS DO BOT ---------------- //
 
     private String obterMenuPrincipal() {
-        return "⚡ **TERMINAL PESTBOT | SISTEMA OPERACIONAL** ⚡\n\n" +
-                "Protocolo de atendimento ativado. Sou seu assistente virtual de triagem. " +
-                "Para prosseguir com o seu monitoramento, insira o **NÚMERO** da diretriz desejada:\n\n" +
-                "➔ **[1]** 🔐 Termos Jurídicos e Consentimento LGPD\n" +
-                "➔ **[2]** 🧪 Licenciamento Técnico (ANVISA/IBAMA)\n" +
-                "➔ **[3]** ☣️ Catálogo de Defesa Biológica e Pragas\n" +
-                "➔ **[4]** 🛰️ Sincronizar Rastreamento GPS do Técnico\n" +
-                "➔ **[5]** 👨‍🔧 Bypass: Conectar Operador Humano";
+        return "🤖 **PAINEL CENTRAL PESTBOT**\n\n" +
+                "Selecione o canal de transmissão digitando apenas o **número** da opção:\n\n" +
+                "🔹 **1** - Credenciais Corporativas (Institucional)\n" +
+                "🔹 **2** - Catálogo Químico e Pragas Alvo\n" +
+                "🔹 **3** - Link de Telemetria GPS do Técnico\n" +
+                "🔹 **4** - **Formar Nova Ordem de Serviço (WEB)**";
     }
 
-    private String obterTermosLGPD() {
-        return "🔐 **DIRETRIZES DE PRIVACIDADE E DADOS (LGPD)**\n\n" +
-                "A plataforma PestControlX opera sob criptografia avançada. Os logs de interação, " +
-                "telemetria GPS e dados estruturais são retidos unicamente para a emissão de " +
-                "Certificados de Desinfecção Obrigatórios.\n\n" +
-                "*Status: Protocolo de segurança operando em conformidade com a ANPD.*";
-    }
-
-    private String obterLicenciamentoAmbiental() {
-        return "🧪 **SISTEMA DE CONFORMIDADE E LICENCIAMENTO**\n\n" +
-                "Nossas operações químicas são auditadas sob os seguintes registros:\n" +
-                "• **ANVISA:** Uso de domissanitários de ação focal com baixíssima toxicidade para mamíferos.\n" +
-                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambiental.";
+    private String obterInstitucional() {
+        return "🏢 **PESTCONTROLX TECH CO.**\n\n" +
+                "Líder em manejo ecológico integrado de vetores biológicos urbanos.\n" +
+                "• **Licença Sanitária:** Ativa via ANVISA\n" +
+                "• **IBAMA:** Registro ativo para controle e manejo seguro de impacto ambientado.";
     }
 
     private String obterCatalogoPragas() {
         return "☣️ **CATÁLOGO DE DEFESA BIOLÓGICA**\n\n" +
-                "Táticas de choque químico e manejo integrados disponíveis para:\n" +
-                "• Blatella germanica (Baratas)\n" +
-                "• Rattus norvegicus (Roedores)\n" +
-                "• Tityus serrulatus (Escorpiões)\n" +
-                "• Coptotermes gestroi (Cupins Subterrâneos)";
+                "Táticas de choque químico disponíveis para:\n" +
+                "• *Blatella germanica* (Baratas de Esgoto)\n" +
+                "• *Rattus norvegicus* (Roedores / Desratização Estática)\n" +
+                "• *Tityus serrulatus* (Escorpiões / Barreiras Químicas)";
     }
 
     private String obterRastreamentoGPS() {
         return "🛰️ **MÓDULO DE TELEMETRIA GPS**\n\n" +
-                "Conexão de satélite pronta para pareamento. Assim que o técnico iniciar a rota, " +
-                "o radar no seu dashboard será ativado em tempo real.\n" +
-                "*(Certifique-se de manter as permissões de localização do Android ativas).*";
-    }
-
-    private String obterSuporteHumano() {
-        return "👨‍🔧 **BYPASS AUTORIZADO | TRANSFERÊNCIA**\n\n" +
-                "Ping de prioridade enviado ao dashboard corporativo. " +
-                "Um especialista técnico vai assumir a comunicação nesta mesma interface em instantes. Aguarde na linha... 🟢";
+                "Conexão de satélite pronta para pareamento. Assim que o técnico iniciar a rota no painel dele, o radar do seu app notificará o deslocamento.";
     }
 
     @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
     public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
-        return mensagemRepository.findByEmpresaIdAndClienteId(empresaId, clienteId);
+        return mensagemRepository.findTop50ByEmpresaIdAndClienteIdOrderByDataHoraAsc(empresaId, clienteId);
     }
 }
