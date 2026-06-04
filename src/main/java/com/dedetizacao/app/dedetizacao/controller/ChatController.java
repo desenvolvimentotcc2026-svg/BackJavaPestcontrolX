@@ -91,7 +91,7 @@ public class ChatController {
         mensagemRepository.save(mensagem);
 
         if (mensagem.getConteudo() == null) return;
-        String textoUsuario = message.getConteudo().trim().toUpperCase();
+        String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
 
         if (textoUsuario.equals("MENU")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
