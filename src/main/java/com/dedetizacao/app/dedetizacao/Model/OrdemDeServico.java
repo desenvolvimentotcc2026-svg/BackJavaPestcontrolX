@@ -44,8 +44,7 @@ public class OrdemDeServico {
 
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
-
-    // ⚡ SOBRECARGA 1: Permite que controllers antigos passem o Objeto Cliente completo
+    
     public void setCliente(Cliente clienteObj) {
         if (clienteObj != null) {
             this.cliente = clienteObj.getNome();

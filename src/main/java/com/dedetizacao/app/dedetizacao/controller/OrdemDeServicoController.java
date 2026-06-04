@@ -48,14 +48,17 @@ public class OrdemDeServicoController {
 
     @GetMapping
     public ResponseEntity<List<OrdemDeServico>> listarTodas() {
-        return ResponseEntity.ok(service.listarTodas());
+        // Uso direto do repository injetado para evitar erro de nomenclatura no service
+        return ResponseEntity.ok(ordemRepository.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<OrdemDeServico> buscarPorId(@PathVariable Long id) {
-        return service.buscarPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        OrdemDeServico ordem = service.buscarPorId(id);
+        if (ordem != null) {
+            return ResponseEntity.ok(ordem);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     // 🛰️ TRANSMISSÃO TELEMÉTRICA DO GPS VIA WEBSOCKETS
