@@ -18,7 +18,10 @@ public class OrdemDeServico {
     private String descricao;
     private String status;
 
-    private LocalDateTime dataAbertura; // Campo exigido pela linha 42 do OrdemDeServicoController
+    // Atributos de compatibilidade integrados de forma segura
+    private String funcionario;
+    private String dataAgendamento;
+    private LocalDateTime dataAbertura;
 
     // Construtores
     public OrdemDeServico() {
@@ -29,7 +32,7 @@ public class OrdemDeServico {
         this.descricao = descricao;
     }
 
-    // Getters e Setters Estruturados
+    // Getters e Setters Padrão
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -42,6 +45,14 @@ public class OrdemDeServico {
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
 
+    // ⚡ SOBRECARGA 1: Permite que controllers antigos passem o Objeto Cliente completo
+    public void setCliente(Cliente clienteObj) {
+        if (clienteObj != null) {
+            this.cliente = clienteObj.getNome();
+            this.clienteId = clienteObj.getId();
+        }
+    }
+
     public String getPragaAlvo() { return pragaAlvo; }
     public void setPragaAlvo(String pragaAlvo) { this.pragaAlvo = pragaAlvo; }
 
@@ -53,4 +64,23 @@ public class OrdemDeServico {
 
     public LocalDateTime getDataAbertura() { return dataAbertura; }
     public void setDataAbertura(LocalDateTime dataAbertura) { this.dataAbertura = dataAbertura; }
+
+    public LocalDateTime getData() { return this.dataAbertura != null ? this.dataAbertura : LocalDateTime.now(); }
+    public void setData(LocalDateTime data) { this.dataAbertura = data; }
+
+    public String getFuncionario() { return funcionario; }
+    public void setFuncionario(String funcionario) { this.funcionario = funcionario; }
+
+    public String getDataAgendamento() { return dataAgendamento; }
+    public void setDataAgendamento(String dataAgendamento) { this.dataAgendamento = dataAgendamento; }
+
+    // Retorna representação em string segura para evitar quebra no OrdemDeServicoController
+    public String getEmpresa() { return this.empresaId != null ? String.valueOf(this.empresaId) : ""; }
+
+    // Aceita objeto Empresa vindo de controllers legados (ex: SolicitacaoController)
+    public void setEmpresa(Empresa empresaObj) {
+        if (empresaObj != null) {
+            this.empresaId = empresaObj.getId();
+        }
+    }
 }

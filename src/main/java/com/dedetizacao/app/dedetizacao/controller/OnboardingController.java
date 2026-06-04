@@ -4,7 +4,6 @@ import com.dedetizacao.app.dedetizacao.Model.OrdemDeServico;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
 import com.dedetizacao.app.dedetizacao.Repository.SolicitacaoRepository;
-
 import com.dedetizacao.app.dedetizacao.Service.NotificationService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,37 +28,33 @@ public class OnboardingController {
     @Autowired
     private NotificationService notificationService;
 
-    // Simula o banco de tokens das Contas Comerciais das Empresas cadastradas
     private static final String TOKEN_CONTA_COMERCIAL_EMPRESA = "TOKEN_FCM_DA_EMPRESA_AQUI";
 
     @PostMapping("/assinar-termo")
     public ResponseEntity<Map<String, Object>> assinarTermoEConverter(
             @RequestParam String nome,
-            @RequestParam String email,
             @RequestParam String telefone,
-            @RequestParam Long empresaId,
-            @RequestParam String descricaoInfestacao) {
+            @RequestParam String descricaoInfestacao,
+            @RequestParam Long empresaId) {
 
-        // 1. 🚀 SALVA E REGISTRA O NOVO CLIENTE DO ONBOARDING
-        Cliente novoCliente = new Cliente();
-        novoCliente.setNome(nome);
-        novoCliente.setEmail(email);
-        novoCliente.setTelefone(telefone);
-        // Se a sua model de Cliente possuir o campo empresaId ou relacionamento:
-        // novoCliente.setEmpresaId(empresaId);
+        // 1. Persiste o cliente de forma limpa
+        Cliente cliente = new Cliente();
+        cliente.setNome(nome);
+        cliente.setTelefone(telefone);
+        Cliente clienteSalvo = clienteRepository.save(cliente);
 
-        Cliente clienteSalvo = clienteRepository.save(novoCliente);
-
-        // 2. 📝 GERA A ORDEM DE SERVIÇO VINCULADA
+        // 2. Transforma o fluxo em uma Ordem de Serviço ativa
         OrdemDeServico os = new OrdemDeServico();
-        os.setCliente(clienteSalvo); // Passa o cliente persistido com ID gerado
+        os.setCliente(clienteSalvo); // Resolvido por sobrecarga nativa
+        os.setEmpresaId(empresaId);
         os.setStatus("PENDENTE");
         os.setDescricao("Contrato Assinado Digitalmente via Chatbot - " + descricaoInfestacao);
-        os.setDataAgendamento(LocalDateTime.now().plusDays(2).toString()); // Agenda para daqui a 2 dias
+        os.setDataAgendamento(LocalDateTime.now().plusDays(2).toString());
+        os.setDataAbertura(LocalDateTime.now());
 
         OrdemDeServico osSalva = solicitacaoRepository.save(os);
 
-        // 3. 📢 DISPARA A NOTIFICAÇÃO REAL-TIME PARA A EMPRESA
+        // 3. Comunicação em tempo real com o cluster corporativo
         String tituloPush = "🚨 Nova OS Gerada via Chatbot!";
         String corpoPush = "O cliente " + nome + " acabou de aceitar os termos. OS N° " + osSalva.getId() + " aguardando aprovação.";
 
@@ -70,11 +65,10 @@ public class OnboardingController {
             System.err.println("⚠️ Falha ao enviar Push FCM para a empresa: " + e.getMessage());
         }
 
-        // 4. ✨ RETORNA O PAYLOAD DE SUCESSO DE FORMA LIMPA
+        // 4. Retorno limpo estruturado
         Map<String, Object> resposta = new HashMap<>();
         resposta.put("status", "SUCESSO");
-        resposta.put("mensagem", "Termo de consciência assinado e empresa notificada!");
-        resposta.put("clienteId", clienteSalvo.getId());
+        resposta.put("mensagem", "Termo de consciência assinado e OS criada com sucesso.");
         resposta.put("ordemId", osSalva.getId());
 
         return ResponseEntity.ok(resposta);

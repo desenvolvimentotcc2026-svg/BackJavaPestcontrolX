@@ -12,23 +12,23 @@ public class Mensagem {
     private Long id;
 
     private Long empresaId;
-    private Long clienteId;       // Ajustado para o ChatController
+    private Long clienteId;
     private Long remetenteId;
     private Long destinatarioId;
 
     @Column(columnDefinition = "TEXT")
     private String conteudo;
 
-    private String enviadoPor;    // Para sincronização com o App Android
-    private String tipoRemetente; // Utilizado pelo ChatController / BOT
+    private String enviadoPor;
+    private String tipoRemetente;
 
-    private LocalDateTime dataHora; // Utilizado pelo MensagemService
+    private LocalDateTime dataHora;
 
     // Construtor Padrão
     public Mensagem() {
     }
 
-    // Getters e Setters Profissionais (Garantem a compilação limpa)
+    // Getters e Setters Estruturados
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -55,4 +55,8 @@ public class Mensagem {
 
     public LocalDateTime getDataHora() { return dataHora; }
     public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+
+    // 🔥 MÉTODO DE COMPATIBILIDADE EXTRA PARA O CHATCONTROLLER
+    public void setDataEnvio(LocalDateTime dataEnvio) { this.dataHora = dataEnvio; }
+    public LocalDateTime getDataEnvio() { return this.dataHora; }
 }
