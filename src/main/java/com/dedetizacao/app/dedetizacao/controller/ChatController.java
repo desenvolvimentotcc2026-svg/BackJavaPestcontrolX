@@ -31,8 +31,7 @@ public class ChatController {
     @PostMapping("/api/notifications/trigger-acceptance")
     public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(
             @RequestParam Long clienteId,
-            @RequestParam Long ordemId,
-            @RequestParam(defaultValue = "99") Long tecnicoId) {
+            @RequestParam Long ordemId) {
 
         Long empresaIdPadrao = 42L;
 
@@ -59,7 +58,7 @@ public class ChatController {
         tecnicoMsg.setEnviadoPor("SISTEMA");
         tecnicoMsg.setDataHora(LocalDateTime.now());
 
-        String topicoCanalTecnico = "/topic/tecnico/" + tecnicoId;
+        String topicoCanalTecnico = "/topic/tecnico/99";
         messagingTemplate.convertAndSend(topicoCanalTecnico, tecnicoMsg);
 
         return ResponseEntity.ok().build();
@@ -72,7 +71,7 @@ public class ChatController {
     @MessageMapping("/chat/{empresaId}/{clienteId}")
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
 
-        // Fluxo de Inicialização Autônoma do Chat
+        // GATILHO 1: O chat abriu, o app manda [START_BOT] -> Exige o aceite
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "⚡ **SISTEMA PESTCONTROLX ACCESSED**\n\n" +
@@ -82,7 +81,7 @@ public class ChatController {
             return;
         }
 
-        // Fluxo de Aceite dos Termos de Serviço via interface móvel
+        // GATILHO 2: Usuário marcou o Checkbox de Aceite no Android
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equals("[ACEITOU_TERMOS]")) {
             dispararRespostaBot(empresaId, clienteId,
                     "✅ **TERMOS ACEITOS COM SUCESSO!**\n\n" +
@@ -90,7 +89,7 @@ public class ChatController {
             return;
         }
 
-        // Processamento básico e auditoria de mensagens normais
+        // Processamento básico e auditoria de mensagens normais do chat
         mensagem.setEmpresaId(empresaId);
         mensagem.setClienteId(clienteId);
         mensagem.setDataHora(LocalDateTime.now());
@@ -99,7 +98,7 @@ public class ChatController {
         if (mensagem.getConteudo() == null) return;
         String textoUsuario = mensagem.getConteudo().trim().toUpperCase();
 
-        // Árvore de comandos estruturada do menu interativo
+        // Árvore de comandos estruturada do menu interativo (PestBot)
         if (textoUsuario.equals("MENU")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
         } else if (textoUsuario.equals("1")) {
@@ -116,14 +115,14 @@ public class ChatController {
                             "🔗 " + linkOrdem + "\n\n" +
                             "Após o preenchimento, o console do Técnico de Campo será alertado em tempo real!");
         } else {
-            dispararRespostaBot(empresaId, clienteId, "🤖 Comando não reconhecido. Digite **MENU** para reiniciar a triagem.");
+            // Se não for um comando do bot, apenas transmite para o canal (comunicação humana fluida)
+            messagingTemplate.convertAndSend("/topic/chat/" + empresaId + "/" + clienteId, mensagem);
         }
     }
 
     /**
      * RECUPERAÇÃO DE HISTÓRICO - REST API
-     * Retorna as últimas 50 mensagens trocadas entre o cliente e a corporação.
-     * (Mantido estritamente de forma única para sanar o erro de Ambiguous Mapping)
+     * Retorna as últimas 50 mensagens trocadas de forma limpa e unificada.
      */
     @GetMapping("/api/chat/historico/{empresaId}/{clienteId}")
     public List<Mensagem> buscarHistorico(@PathVariable Long empresaId, @PathVariable Long clienteId) {
