@@ -12,9 +12,7 @@ public interface OrdemDeServicoRepository extends JpaRepository<OrdemDeServico, 
     // Busca todas as ordens de um cliente específico
     List<OrdemDeServico> findByClienteId(Long clienteId);
 
-    // Busca todas as ordens atribuídas a um funcionário (técnico)
-    List<OrdemDeServico> findByFuncionarioId(Long funcionarioId);
 
-    @Query("SELECT o FROM OrdemDeServico o WHERE o.funcionario = :funcionarioId") // Ajuste a lógica da query se necessário
+    @Query("SELECT o FROM OrdemDeServico o WHERE o.funcionario = :funcionarioId") 
     List<OrdemDeServico> findByFuncionarioId(@Param("funcionarioId") Long funcionarioId);
 }
