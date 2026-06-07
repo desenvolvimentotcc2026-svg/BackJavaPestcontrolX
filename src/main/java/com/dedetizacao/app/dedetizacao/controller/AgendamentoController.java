@@ -5,18 +5,24 @@ import com.dedetizacao.app.dedetizacao.Model.Agendamento;
 import com.dedetizacao.app.dedetizacao.Service.AgendamentoService;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/agendamentos")
+@CrossOrigin(origins = "*")
 public class AgendamentoController {
 
-    private final AgendamentoService agendamentoService;
+    private final AgendamentoService service;
 
-    public AgendamentoController(AgendamentoService agendamentoService) {
-        this.agendamentoService = agendamentoService;
+    public AgendamentoController(AgendamentoService service) {
+        this.service = service;
     }
 
     @PostMapping
-    public Agendamento criar(@RequestBody AgendamentoDto dto) {
-        return agendamentoService.criar(dto);
+    public ResponseEntity<Agendamento> criar(
+            @RequestBody AgendamentoDto dto) {
+
+        return ResponseEntity.ok(
+                service.criar(dto)
+        );
     }
 }

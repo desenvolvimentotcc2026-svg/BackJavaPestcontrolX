@@ -46,6 +46,14 @@ public class AgendamentoDto {
         this.data = data;
     }
 
+    public Long getOrdemId(){
+        return ordemId;
+    }
+
+    public void setOrdemId(Long ordemId){
+        this.ordemId = ordemId;
+    }
+
     private Long clienteId;
 
     private Long funcionarioId;
@@ -53,6 +61,8 @@ public class AgendamentoDto {
     private Long servicoId;
 
     private LocalDate data;
+
+    private Long ordemId;
 
     public AgendamentoDto() {
     }

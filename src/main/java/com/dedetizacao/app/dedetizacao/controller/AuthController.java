@@ -299,4 +299,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("CNPJ ou Chave incorretos");
         }
     }
+
+    @GetMapping("/empresa/{empresaId}")
+    public List<Funcionario> listarPorEmpresa(
+            @PathVariable Long empresaId
+    ){
+        return funcionarioService.listarPorEmpresa(empresaId);
+    }
+
+    @GetMapping("/empresa/{empresaId}/dashboard")
+    public ResponseEntity<Map<String,Object>> dashboard(
+            @PathVariable Long empresaId
+    ){
 }

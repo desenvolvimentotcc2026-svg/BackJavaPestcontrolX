@@ -98,6 +98,10 @@ public class FuncionarioService {
         return funcionarioRepository.findByStatus(status);
     }
 
+    public List<Funcionario> listarPorEmpresa(Long empresaId){
+        return funcionarioRepository.findByEmpresaId(empresaId);
+    }
+
 
     public Optional<Funcionario> buscarPorEmail(String email) {
         return funcionarioRepository.findByEmail(email);

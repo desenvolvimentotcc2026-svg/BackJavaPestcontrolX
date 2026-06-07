@@ -52,9 +52,10 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/ordens/**").permitAll()
                         .requestMatchers("/api/empresas/**").permitAll()
+                        .requestMatchers("/agendamentos/**").permitAll()
 
                         .anyRequest().authenticated()
-                
+
                 ) // A quebra estava provavelmente aqui!
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 
