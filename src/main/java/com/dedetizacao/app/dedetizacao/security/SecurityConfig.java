@@ -54,7 +54,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/empresas/**").permitAll()
 
                         .anyRequest().authenticated()
-                )
+                
                 ) // A quebra estava provavelmente aqui!
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 
