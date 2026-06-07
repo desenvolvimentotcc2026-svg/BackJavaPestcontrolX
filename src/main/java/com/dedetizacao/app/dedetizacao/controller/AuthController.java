@@ -225,7 +225,8 @@ public class AuthController {
                             try {
                                 Method m = empresaService.getClass().getMethod("Salvar", e.getClass());
                                 m.invoke(empresaService, e);
-                            } catch (Exception ignored) {}
+                            } catch (Exception ignored) {
+                            }
                         }
                     });
                     break;
@@ -262,7 +263,8 @@ public class AuthController {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return "TOKEN_FALLBACK_PRODUCAO_" + System.currentTimeMillis();
     }
 
@@ -278,7 +280,8 @@ public class AuthController {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
 
@@ -303,12 +306,14 @@ public class AuthController {
     @GetMapping("/empresa/{empresaId}")
     public List<Funcionario> listarPorEmpresa(
             @PathVariable Long empresaId
-    ){
+    ) {
         return funcionarioService.listarPorEmpresa(empresaId);
     }
 
     @GetMapping("/empresa/{empresaId}/dashboard")
-    public ResponseEntity<Map<String,Object>> dashboard(
+    public ResponseEntity<Map<String, Object>> dashboard(
             @PathVariable Long empresaId
-    ){
+    ) {
+    }
+
 }
