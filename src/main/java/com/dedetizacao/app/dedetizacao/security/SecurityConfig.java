@@ -46,12 +46,15 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/ws-pestcontrol/**", "/ws-pestcontrol-sockjs/**").permitAll()
+                        .requestMatchers("/ws-pestcontrol/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                        // Libera as rotas de API protegidas exigindo apenas um token válido
-                        .requestMatchers("/api/**").authenticated()
+
+                        .requestMatchers("/api/ordens/**").permitAll()
+                        .requestMatchers("/api/empresas/**").permitAll()
+
                         .anyRequest().authenticated()
+                )
                 ) // A quebra estava provavelmente aqui!
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 

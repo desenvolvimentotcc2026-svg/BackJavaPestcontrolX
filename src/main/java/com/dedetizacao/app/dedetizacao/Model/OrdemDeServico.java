@@ -15,15 +15,26 @@ public class OrdemDeServico {
     private Long empresaId;
     private String cliente;
     private String pragaAlvo;
-    private String descricao;
-    private String status;
 
-    // Atributos de compatibilidade integrados de forma segura
+    @Column(length = 2000)
+    private String descricao;
+
+    private String status;
     private String funcionario;
     private String dataAgendamento;
     private LocalDateTime dataAbertura;
+    private LocalDateTime dataInicio;
+    private LocalDateTime dataFinalizacao;
+    private Double latitude;
+    private Double longitude;
+    private String produtoAplicado;
 
-    // Construtores
+    @Column(length = 2000)
+    private String observacaoTecnica;
+
+    @Lob
+    private String stringFotoBase64;
+
     public OrdemDeServico() {
     }
 
@@ -32,7 +43,6 @@ public class OrdemDeServico {
         this.descricao = descricao;
     }
 
-    // Getters e Setters Padrão
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -44,7 +54,7 @@ public class OrdemDeServico {
 
     public String getCliente() { return cliente; }
     public void setCliente(String cliente) { this.cliente = cliente; }
-    
+
     public void setCliente(Cliente clienteObj) {
         if (clienteObj != null) {
             this.cliente = clienteObj.getNome();
@@ -61,22 +71,41 @@ public class OrdemDeServico {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
-    public LocalDateTime getDataAbertura() { return dataAbertura; }
-    public void setDataAbertura(LocalDateTime dataAbertura) { this.dataAbertura = dataAbertura; }
-
-    public LocalDateTime getData() { return this.dataAbertura != null ? this.dataAbertura : LocalDateTime.now(); }
-    public void setData(LocalDateTime data) { this.dataAbertura = data; }
-
     public String getFuncionario() { return funcionario; }
     public void setFuncionario(String funcionario) { this.funcionario = funcionario; }
 
     public String getDataAgendamento() { return dataAgendamento; }
     public void setDataAgendamento(String dataAgendamento) { this.dataAgendamento = dataAgendamento; }
 
-    // Retorna representação em string segura para evitar quebra no OrdemDeServicoController
+    public LocalDateTime getDataAbertura() { return dataAbertura; }
+    public void setDataAbertura(LocalDateTime dataAbertura) { this.dataAbertura = dataAbertura; }
+
+    public LocalDateTime getDataInicio() { return dataInicio; }
+    public void setDataInicio(LocalDateTime dataInicio) { this.dataInicio = dataInicio; }
+
+    public LocalDateTime getDataFinalizacao() { return dataFinalizacao; }
+    public void setDataFinalizacao(LocalDateTime dataFinalizacao) { this.dataFinalizacao = dataFinalizacao; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public String getProdutoAplicado() { return produtoAplicado; }
+    public void setProdutoAplicado(String produtoAplicado) { this.produtoAplicado = produtoAplicado; }
+
+    public String getObservacaoTecnica() { return observacaoTecnica; }
+    public void setObservacaoTecnica(String observacaoTecnica) { this.observacaoTecnica = observacaoTecnica; }
+
+    public String getStringFotoBase64() { return stringFotoBase64; }
+    public void setStringFotoBase64(String stringFotoBase64) { this.stringFotoBase64 = stringFotoBase64; }
+
+    public LocalDateTime getData() { return this.dataAbertura != null ? this.dataAbertura : LocalDateTime.now(); }
+    public void setData(LocalDateTime data) { this.dataAbertura = data; }
+
     public String getEmpresa() { return this.empresaId != null ? String.valueOf(this.empresaId) : ""; }
 
-    // Aceita objeto Empresa vindo de controllers legados (ex: SolicitacaoController)
     public void setEmpresa(Empresa empresaObj) {
         if (empresaObj != null) {
             this.empresaId = empresaObj.getId();
