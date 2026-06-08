@@ -21,7 +21,6 @@ public class FuncionarioService {
         this.empresaRepo = empresaRepo;
     }
 
-    // 🔥 O MÉTODO QUE ESTAVA FALTANDO
     public Funcionario criar(RegisterRequest req, Long usuarioId) {
 
         Empresa empresa = empresaRepo.findById(Long.valueOf(req.getCnpj()))
@@ -31,7 +30,6 @@ public class FuncionarioService {
         f.setNome(req.getNome());
         f.setEmail(req.getEmail());
         f.setCpf(req.getCnpj());
-        f.setEmpresa(empresa);
 
         return repo.save(f);
     }
@@ -40,33 +38,20 @@ public class FuncionarioService {
         return repo.findAll();
     }
 
-    public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
-        Empresa empresa = empresaRepo.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
-
-        Funcionario f = new Funcionario();
-        f.setNome(dto.getNome());
-        f.setEmail(dto.getEmail());
-        f.setCpf(dto.getCpf());
-        f.setEmpresa(empresa);
-
-        return repo.save(f);
+    public Funcionario buscarPorId(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
     }
 
     public Funcionario atualizar(Long id, Funcionario f) {
-        Funcionario atual = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
-
-        atual.setNome(f.getNome());
-        atual.setCargo(f.getCargo());
-
-        return repo.save(atual);
+        Funcionario func = buscarPorId(id);
+        func.setNome(f.getNome());
+        func.setCargo(f.getCargo());
+        return repo.save(func);
     }
 
     public void atualizarStatus(Long id, String status) {
-        Funcionario f = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
-
+        Funcionario f = buscarPorId(id);
         f.setStatus(status);
         repo.save(f);
     }
@@ -80,7 +65,7 @@ public class FuncionarioService {
         dto.setId(f.getId());
         dto.setNome(f.getNome());
         dto.setEmail(f.getEmail());
-        dto.setCpf(f.getCpf());
+        dto.setTelefone(f.getTelefone());
         return dto;
     }
 }

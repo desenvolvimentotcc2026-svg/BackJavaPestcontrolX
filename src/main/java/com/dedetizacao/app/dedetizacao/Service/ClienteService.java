@@ -1,6 +1,6 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
@@ -12,28 +12,59 @@ import java.util.List;
 @Service
 public class ClienteService {
 
-    private final ClienteRepository repo;
-    private final EmpresaRepository empresaRepo;
+    private final ClienteRepository clienteRepository;
+    private final EmpresaRepository empresaRepository;
 
-    public ClienteService(ClienteRepository repo, EmpresaRepository empresaRepo) {
-        this.repo = repo;
-        this.empresaRepo = empresaRepo;
-    }
-
-    public Cliente salvarFromRegister(RegisterRequest req, Long usuarioId) {
-
-        Empresa empresa = empresaRepo.findById(Long.valueOf(req.getCnpj()))
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
-
-        Cliente c = new Cliente();
-        c.setNome(req.getNome());
-        c.setEmail(req.getEmail());
-        c.setEmpresa(empresa);
-
-        return repo.save(c);
+    public ClienteService(ClienteRepository clienteRepository,
+                          EmpresaRepository empresaRepository) {
+        this.clienteRepository = clienteRepository;
+        this.empresaRepository = empresaRepository;
     }
 
     public List<Cliente> listarTodos() {
-        return repo.findAll();
+        return clienteRepository.findAll();
+    }
+
+    public Cliente salvar(ClienteDto dto, Long empresaId) {
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        Cliente cliente = new Cliente();
+        cliente.setNome(dto.getNome());
+        cliente.setEmail(dto.getEmail());
+        cliente.setTelefone(dto.getTelefone());
+        cliente.setEmpresa(empresa);
+
+        return clienteRepository.save(cliente);
+    }
+
+    public Cliente buscarPorId(Long id) {
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
+
+    public Cliente atualizar(Long id, Cliente clienteAtualizado) {
+        Cliente cliente = buscarPorId(id);
+
+        cliente.setNome(clienteAtualizado.getNome());
+        cliente.setEmail(clienteAtualizado.getEmail());
+        cliente.setTelefone(clienteAtualizado.getTelefone());
+        cliente.setEndereco(clienteAtualizado.getEndereco());
+
+        return clienteRepository.save(cliente);
+    }
+
+    public void deletar(Long id) {
+        clienteRepository.deleteById(id);
+    }
+
+    public ClienteDto toDTO(Cliente cliente) {
+        ClienteDto dto = new ClienteDto();
+        dto.setId(cliente.getId());
+        dto.setNome(cliente.getNome());
+        dto.setEmail(cliente.getEmail());
+        dto.setTelefone(cliente.getTelefone());
+        return dto;
     }
 }
