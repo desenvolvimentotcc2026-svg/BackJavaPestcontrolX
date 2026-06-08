@@ -21,8 +21,6 @@ public class ClienteService {
 
     public Cliente salvar(ClienteDto dto, Long empresaId) {
 
-        Empresa empresa = empresaRepo.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         Cliente c = new Cliente();
         c.setNome(dto.getNome());
@@ -61,5 +59,13 @@ public class ClienteService {
         dto.setEmail(c.getEmail());
         dto.setTelefone(c.getTelefone());
         return dto;
+    }
+
+    public void vincularCliente(Long clienteId, Long empresaId) {
+        Cliente c = repo.findById(clienteId).orElseThrow();
+        Empresa e = empresaRepo.findById(empresaId).orElseThrow();
+
+        c.setEmpresa(e);
+        repo.save(c);
     }
 }
