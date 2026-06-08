@@ -3,11 +3,11 @@ package com.dedetizacao.app.dedetizacao.controller;
 import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Dto.LoginRequest;
 import com.dedetizacao.app.dedetizacao.Model.Usuario;
+import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.*;
-import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -62,7 +62,7 @@ public class AuthController {
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "tipo", user.getTipo(),
+                "tipo", user.getTipo().name(),
                 "id", user.getId(),
                 "nome", user.getNome()
         ));
@@ -84,19 +84,13 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        switch (req.getTipo()) {
+        switch (user.getTipo()) {
 
-            case "EMPRESA":
-                empresaService.salvarFromRegister(req, salvo.getId());
-                break;
+            case EMPRESA -> empresaService.salvarFromRegister(req, salvo.getId());
 
-            case "CLIENTE":
-                clienteService.salvarFromRegister(req, salvo.getId());
-                break;
+            case CLIENTE -> clienteService.salvarFromRegister(req, salvo.getId());
 
-            case "FUNCIONARIO":
-                funcionarioService.criar(req, salvo.getId());
-                break;
+            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId());
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)

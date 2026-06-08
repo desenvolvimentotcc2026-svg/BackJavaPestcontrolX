@@ -1,15 +1,14 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
 import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
-import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FuncionarioService {
@@ -22,21 +21,33 @@ public class FuncionarioService {
         this.empresaRepo = empresaRepo;
     }
 
+    // 🔥 O MÉTODO QUE ESTAVA FALTANDO
+    public Funcionario criar(RegisterRequest req, Long usuarioId) {
+
+        Empresa empresa = empresaRepo.findById(Long.valueOf(req.getCnpj()))
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        Funcionario f = new Funcionario();
+        f.setNome(req.getNome());
+        f.setEmail(req.getEmail());
+        f.setCpf(req.getCnpj());
+        f.setEmpresa(empresa);
+
+        return repo.save(f);
+    }
+
     public List<Funcionario> listarTodos() {
         return repo.findAll();
     }
 
     public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
-
         Empresa empresa = empresaRepo.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         Funcionario f = new Funcionario();
         f.setNome(dto.getNome());
         f.setEmail(dto.getEmail());
-        f.setTelefone(dto.getTelefone());
         f.setCpf(dto.getCpf());
-        f.setCargo(dto.getCargo());
         f.setEmpresa(empresa);
 
         return repo.save(f);
@@ -44,7 +55,7 @@ public class FuncionarioService {
 
     public Funcionario atualizar(Long id, Funcionario f) {
         Funcionario atual = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
 
         atual.setNome(f.getNome());
         atual.setCargo(f.getCargo());
@@ -54,7 +65,7 @@ public class FuncionarioService {
 
     public void atualizarStatus(Long id, String status) {
         Funcionario f = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Não encontrado"));
+                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
 
         f.setStatus(status);
         repo.save(f);

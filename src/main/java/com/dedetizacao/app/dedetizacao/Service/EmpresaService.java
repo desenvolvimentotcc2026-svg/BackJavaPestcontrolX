@@ -1,62 +1,46 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import java.util.List;
-import java.util.Optional; // Importante para o AuthController
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
-import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmpresaService {
 
-    private final EmpresaRepository empresaRepository;
+    private final EmpresaRepository repo;
 
-    public EmpresaService(EmpresaRepository empresaRepository) {
-        this.empresaRepository = empresaRepository;
-    }
-
-    public List<Empresa> listartodos() {
-        return empresaRepository.findAll();
-    }
-
-    public Empresa Salvar(Empresa empresa) {
-        return empresaRepository.save(empresa);
+    public EmpresaService(EmpresaRepository repo) {
+        this.repo = repo;
     }
 
     public Empresa salvarFromRegister(RegisterRequest req, Long usuarioId) {
+
         Empresa e = new Empresa();
         e.setNome(req.getNome());
-        e.setCnpj(req.getCnpj());
         e.setEmail(req.getEmail());
-        return empresaRepository.save(e);
+        e.setCnpj(req.getCnpj());
+
+        return repo.save(e);
     }
 
-    public Empresa buscarporid(Long id) {
-        return empresaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Erro ao encontrar a empresa!"));
+    public List<Empresa> listarTodos() {
+        return repo.findAll();
     }
 
-    public void deletar(long id) {
-        empresaRepository.deleteById(id);
+    public Empresa buscarPorId(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
     }
 
-    public Empresa atualizar(long id, Empresa empresaatualizada) {
-        Empresa empresa = buscarporid(id);
-
-        empresa.setCnpj(empresaatualizada.getCnpj());
-        empresa.setEmail(empresaatualizada.getEmail());
-        empresa.setNome(empresaatualizada.getNome());
-
-        return empresaRepository.save(empresa);
-    }
-
-    public boolean validarCredenciais(String cnpj, String chave) {
-        // Tenta encontrar a empresa. Se retornar presente, validou!
-        return empresaRepository.findByCnpjAndChaveCorporativa(cnpj, chave).isPresent();
+    public void deletar(Long id) {
+        repo.deleteById(id);
     }
 
     public Optional<Empresa> buscarPorEmail(String email) {
-        return empresaRepository.findByEmail(email);
+        return repo.findByEmail(email);
     }
 }
