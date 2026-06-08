@@ -85,16 +85,22 @@ public class AuthController {
 
         switch (user.getTipo()) {
 
-            case EMPRESA -> empresaService.criar(salvo.getId());
+            case EMPRESA -> {
+                empresaService.criar(salvo.getId());
+            }
 
-            case Cliente c = new Cliente();
-            c.setNome(req.getNome());
-            c.setEmail(req.getEmail());
-            c.setEmpresaId(1L); // TEMP fix seguro
+            case CLIENTE -> {
+                Cliente c = new Cliente();
+                c.setNome(req.getNome());
+                c.setEmail(req.getEmail());
+                c.setEmpresaId(1L); // fix temporário seguro
 
-            clienteService.salvar(c);
+                clienteService.salvar(c);
+            }
 
-            case FUNCIONARIO -> funcionarioService.criar(salvo.getId(), req);
+            case FUNCIONARIO -> {
+                funcionarioService.criar(salvo.getId(), req);
+            }
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
