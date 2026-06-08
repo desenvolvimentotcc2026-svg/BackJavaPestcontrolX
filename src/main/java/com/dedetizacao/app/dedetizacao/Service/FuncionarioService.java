@@ -29,6 +29,7 @@ public class FuncionarioService {
         f.setNome(dto.getNome());
         f.setEmail(dto.getEmail());
         f.setTelefone(dto.getTelefone());
+        f.setStatus("OFFLINE");
         f.setEmpresa(empresa);
 
         return repo.save(f);
@@ -46,11 +47,28 @@ public class FuncionarioService {
     public Funcionario atualizar(Long id, Funcionario f) {
         Funcionario func = buscarPorId(id);
         func.setNome(f.getNome());
-        func.setCargo(f.getCargo());
+        func.setEmail(f.getEmail());
+        func.setTelefone(f.getTelefone());
+        func.setStatus(f.getStatus());
         return repo.save(func);
     }
 
-    public void deletar(Long id) {
-        repo.deleteById(id);
+    public void atualizarStatus(Long id, String status) {
+        Funcionario f = buscarPorId(id);
+        f.setStatus(status);
+        repo.save(f);
+    }
+
+    public List<Funcionario> listarPorStatus(String status) {
+        return repo.findByStatus(status);
+    }
+
+    public FuncionarioDto toDTO(Funcionario f) {
+        FuncionarioDto dto = new FuncionarioDto();
+        dto.setId(f.getId());
+        dto.setNome(f.getNome());
+        dto.setEmail(f.getEmail());
+        dto.setTelefone(f.getTelefone());
+        return dto;
     }
 }

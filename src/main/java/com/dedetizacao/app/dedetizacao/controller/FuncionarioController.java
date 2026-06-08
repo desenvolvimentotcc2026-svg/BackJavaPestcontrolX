@@ -22,9 +22,11 @@ public class FuncionarioController {
     }
 
     @GetMapping
-    public List<FuncionarioDto> listartodos(){
-        // Usa Stream API para transformar a lista de funcionários reais em uma lista de Dtos seguros antes de enviar ao cliente.
-        return funcionarioService.listarTodos().stream().map(funcionarioService::toDTO).toList();
+    public List<FuncionarioDto> listartodos() {
+        return funcionarioService.listarTodos()
+                .stream()
+                .map(f -> funcionarioService.toDTO(f))
+                .toList();
     }
 
     @DeleteMapping("{id}")

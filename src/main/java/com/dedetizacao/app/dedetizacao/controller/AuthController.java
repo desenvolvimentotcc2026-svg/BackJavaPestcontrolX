@@ -83,7 +83,7 @@ public class AuthController {
         user.setNome(req.getNome());
         user.setEmail(req.getEmail());
         user.setSenha(passwordEncoder.encode(req.getSenha()));
-        user.setTipo(req.getTipo());
+        user.setTipo(TipoUsuario.valueOf(req.getTipo()));
 
         Usuario salvo = usuarioService.salvar(user);
 
