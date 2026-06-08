@@ -50,8 +50,6 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
 
-                        .anyRequest().authenticated()
-
                         .requestMatchers("/api/empresas/**").permitAll()
                         .requestMatchers("/agendamentos/**").permitAll()
 
