@@ -21,17 +21,16 @@ public class FuncionarioService {
         this.empresaRepo = empresaRepo;
     }
 
-    // CREATE CORRETO (AGORA RETORNA FUNCIONARIO)
-    public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
+    // ✅ USADO PELO AUTH CONTROLLER (REGISTRO)
+    public Funcionario criar(RegisterRequest req, Long usuarioId) {
 
-        Empresa empresa = empresaRepo.findById(empresaId)
+        Empresa empresa = empresaRepo.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         Funcionario f = new Funcionario();
-        f.setNome(dto.getNome());
-        f.setEmail(dto.getEmail());
-        f.setTelefone(dto.getTelefone());
-        f.setCargo(dto.getCargo());
+        f.setNome(req.getNome());
+        f.setEmail(req.getEmail());
+        f.setCpf(req.getCnpj());
         f.setEmpresa(empresa);
 
         return repo.save(f);
@@ -69,7 +68,20 @@ public class FuncionarioService {
         dto.setNome(f.getNome());
         dto.setEmail(f.getEmail());
         dto.setTelefone(f.getTelefone());
-        dto.setCargo(f.getCargo());
         return dto;
+    }
+
+
+    public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
+        Empresa empresa = empresaRepo.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        Funcionario f = new Funcionario();
+        f.setNome(dto.getNome());
+        f.setEmail(dto.getEmail());
+        f.setTelefone(dto.getTelefone());
+        f.setEmpresa(empresa);
+
+        return repo.save(f);
     }
 }

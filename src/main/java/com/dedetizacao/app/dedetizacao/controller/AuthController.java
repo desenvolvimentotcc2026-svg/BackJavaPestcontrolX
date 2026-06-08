@@ -85,10 +85,19 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        switch (user.getTipo()) {
-            case EMPRESA -> empresaService.salvarFromRegister(req, salvo.getId());
-            case CLIENTE -> clienteService.salvarFromRegister(req, salvo.getId());
-            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId());
+        switch (req.getTipo()) {
+
+            case "EMPRESA":
+                empresaService.Salvar(new Empresa());
+                break;
+
+            case "CLIENTE":
+                clienteService.salvar(new ClienteDto(), salvo.getId());
+                break;
+
+            case "FUNCIONARIO":
+                funcionarioService.criar(req, salvo.getId());
+                break;
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
