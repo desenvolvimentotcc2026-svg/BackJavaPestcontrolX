@@ -37,11 +37,12 @@ public class FuncionarioController {
         return ResponseEntity.noContent().build();
     }
     @PostMapping
-    public Funcionario criar(
+    public ResponseEntity<Funcionario> criar(
             @RequestBody FuncionarioDto dto,
             @RequestParam Long empresa_id
     ) {
-        return funcionarioService.salvar(dto, empresa_id);
+        Funcionario salvo = funcionarioService.salvar(dto, empresa_id);
+        return ResponseEntity.ok(salvo);
     }
 
 

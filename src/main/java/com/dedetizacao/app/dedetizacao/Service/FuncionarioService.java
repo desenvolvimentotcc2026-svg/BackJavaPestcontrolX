@@ -21,15 +21,18 @@ public class FuncionarioService {
         this.empresaRepo = empresaRepo;
     }
 
-    public Funcionario criar(RegisterRequest req, Long usuarioId) {
+    // CREATE CORRETO (AGORA RETORNA FUNCIONARIO)
+    public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
 
-        Empresa empresa = empresaRepo.findById(Long.valueOf(req.getCnpj()))
+        Empresa empresa = empresaRepo.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         Funcionario f = new Funcionario();
-        f.setNome(req.getNome());
-        f.setEmail(req.getEmail());
-        f.setCpf(req.getCnpj());
+        f.setNome(dto.getNome());
+        f.setEmail(dto.getEmail());
+        f.setTelefone(dto.getTelefone());
+        f.setCargo(dto.getCargo());
+        f.setEmpresa(empresa);
 
         return repo.save(f);
     }
@@ -66,11 +69,7 @@ public class FuncionarioService {
         dto.setNome(f.getNome());
         dto.setEmail(f.getEmail());
         dto.setTelefone(f.getTelefone());
+        dto.setCargo(f.getCargo());
         return dto;
-    }
-
-    // 🔥 Método exigido pelo FuncionarioController com as chaves fechadas corretamente
-    public void salvar(FuncionarioDto dto, Long empresaId) {
-        // Futura implementação de salvamento de DTO
     }
 }
