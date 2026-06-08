@@ -11,9 +11,11 @@ import java.util.List;
 public class OrdemDeServicoService {
 
     private final OrdemDeServicoRepository repository;
+    private final OrdemDeServicoService service;
 
-    public OrdemDeServicoService(OrdemDeServicoRepository repository) {
+    public OrdemDeServicoService(OrdemDeServicoRepository repository, OrdemDeServicoService service) {
         this.repository = repository;
+        this.service = service;
     }
 
     public List<OrdemDeServico> listar() {
@@ -109,5 +111,13 @@ public class OrdemDeServicoService {
 
     public void deletar(Long id) {
         repository.deleteById(id);
+    }
+
+    public List<OrdemDeServico> listarAtivasPorCliente(Long clienteId) {
+        return repository.findAtivasByClienteId(clienteId);
+    }
+
+    public List<OrdemDeServico> listarAtivasPorEmpresa(Long empresaId) {
+        return repository.findAtivasByEmpresaId(empresaId);
     }
 }

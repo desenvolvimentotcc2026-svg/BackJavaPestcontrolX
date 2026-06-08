@@ -132,7 +132,4 @@ public class OrdemDeServicoController {
         return repository.findAtivasByClienteId(clienteId);
     }
 
-    public List<OrdemDeServico> listarAtivasPorEmpresa(Long empresaId) {
-        return repository.findAtivasByEmpresaId(empresaId);
-    }
 }

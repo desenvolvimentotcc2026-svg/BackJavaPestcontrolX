@@ -143,7 +143,7 @@ public class AuthController {
      * 3. CADASTRO (Registro de novos usuários)
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> registrarUsuario(@RequestBody RegistroDto request) {
 
         if (usuarioService.buscarPorEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body(Map.of("message", "E-mail já está em uso"));
