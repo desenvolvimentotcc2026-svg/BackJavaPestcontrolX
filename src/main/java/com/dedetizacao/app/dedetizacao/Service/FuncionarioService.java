@@ -69,5 +69,8 @@ public class FuncionarioService {
         return dto;
     }
 
-    public void salvar(com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto dto, Long empresaId) {
+    // 🔥 Método exigido pelo FuncionarioController com as chaves fechadas corretamente
+    public void salvar(FuncionarioDto dto, Long empresaId) {
+        // Futura implementação de salvamento de DTO
+    }
 }
