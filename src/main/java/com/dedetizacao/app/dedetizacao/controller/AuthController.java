@@ -83,25 +83,19 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        Long empresaId = 1L; // 🔥 TEMPORÁRIO (evita crash)
+        Long empresaId = req.getEmpresaId(); // IMPORTANTE: vem do front
 
-        switch (user.getTipo()) {
+        if (user.getTipo() == TipoUsuario.EMPRESA) {
 
-            case EMPRESA -> {
-                empresaService.criarFromRegister(salvo.getId());
-            }
+            empresaService.criar(salvo.getId());
 
-            case CLIENTE -> {
-                Cliente c = new Cliente();
-                c.setNome(req.getNome());
-                c.setEmail(req.getEmail());
+        } else if (user.getTipo() == TipoUsuario.CLIENTE) {
 
-                clienteService.salvar(c);
-            }
+            clienteService.criarFromRegister(req, empresaId);
 
-            case FUNCIONARIO -> {
-                funcionarioService.criarFromRegister(req, salvo.getId());
-            }
+        } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
+
+            funcionarioService.criarFromRegister(req, empresaId);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -17,7 +17,6 @@ public class FuncionarioService {
     @Autowired
     private FuncionarioRepository repository;
 
-    private final FuncionarioRepository repo;
     private final EmpresaRepository empresaRepo;
 
 
@@ -85,5 +84,15 @@ public class FuncionarioService {
         f.setEmpresa(empresa);
 
         return repo.save(f);
+    }
+
+        public Funcionario criarFromRegister(RegisterRequest req, Long empresaId) {
+            Funcionario f = new Funcionario();
+            f.setNome(req.getNome());
+            f.setEmail(req.getEmail());
+            f.setEmpresaId(empresaId);
+
+            return repository.save(f);
+        }
     }
 }

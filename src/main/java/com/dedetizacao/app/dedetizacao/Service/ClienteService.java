@@ -36,7 +36,6 @@ public class ClienteService {
         Cliente c = buscarPorId(id);
         c.setNome(novo.getNome());
         c.setEmail(novo.getEmail());
-        c.setTelefone(novo.getTelefone());
         return repository.save(c);
     }
 
@@ -44,13 +43,12 @@ public class ClienteService {
         repository.deleteById(id);
     }
 
-    // DTO + empresaId (CORRETO)
-    public Cliente salvar(ClienteDto dto, Long empresaId) {
-
+    // fluxo register LIMPO
+    public Cliente criarFromRegister(RegisterRequest req, Long empresaId) {
         Cliente c = new Cliente();
-        c.setNome(dto.getNome());
-        c.setEmail(dto.getEmail());
-        c.setTelefone(dto.getTelefone());
+        c.setNome(req.getNome());
+        c.setEmail(req.getEmail());
+        c.setTelefone(req.getTelefone());
 
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
