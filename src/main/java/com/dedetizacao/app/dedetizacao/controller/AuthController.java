@@ -93,7 +93,8 @@ public class AuthController {
                 Cliente c = new Cliente();
                 c.setNome(req.getNome());
                 c.setEmail(req.getEmail());
-                c.setEmpresa(empresa); // fix temporário seguro
+                Empresa empresa = empresaRepository.findById(empresaId)
+                        .orElseThrow(() -> new RuntimeException("Empresa não encontrada")); // fix temporário seguro
 
                 clienteService.salvar(c);
             }

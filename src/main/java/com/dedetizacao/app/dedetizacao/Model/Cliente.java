@@ -17,8 +17,8 @@ public class Cliente {
     // Define que muitos clientes pertencem a uma empresa.
     //e o EAGER faz com que a Empresa seja carregada instantaneamente sempre que buscar o Cliente.
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "empresa_id") // Cria a chave estrangeira (FK) no banco com este nome.
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
     private Empresa empresa;
 
     @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL)

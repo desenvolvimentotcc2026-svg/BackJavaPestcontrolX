@@ -14,6 +14,9 @@ public class ClienteService {
     @Autowired
     private ClienteRepository repository;
 
+    @Autowired
+    private EmpresaRepository empresaRepository;
+
     public Cliente salvar(Cliente c) {
         return repository.save(c);
     }
@@ -38,14 +41,17 @@ public class ClienteService {
         repository.deleteById(id);
     }
 
-    // 🔥 NOVO MÉTODO (RESOLVE SEU ERRO)
     public Cliente salvar(ClienteDto dto, Long empresaId) {
         Cliente c = new Cliente();
 
         c.setNome(dto.getNome());
         c.setEmail(dto.getEmail());
         c.setTelefone(dto.getTelefone());
-        c.setEmpresaId(empresaId);
+
+        Empresa empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        c.setEmpresa(empresa);
 
         return repository.save(c);
     }
