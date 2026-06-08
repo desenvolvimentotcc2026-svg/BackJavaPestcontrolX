@@ -8,7 +8,6 @@ import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
 @Service
 public class ClienteService {
 
@@ -43,7 +42,24 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
     }
 
+    public Cliente atualizar(Long id, Cliente cliente) {
+        Cliente c = buscarPorId(id);
+        c.setNome(cliente.getNome());
+        c.setEmail(cliente.getEmail());
+        c.setTelefone(cliente.getTelefone());
+        return repo.save(c);
+    }
+
     public void deletar(Long id) {
         repo.deleteById(id);
+    }
+
+    public ClienteDto toDTO(Cliente c) {
+        ClienteDto dto = new ClienteDto();
+        dto.setId(c.getId());
+        dto.setNome(c.getNome());
+        dto.setEmail(c.getEmail());
+        dto.setTelefone(c.getTelefone());
+        return dto;
     }
 }

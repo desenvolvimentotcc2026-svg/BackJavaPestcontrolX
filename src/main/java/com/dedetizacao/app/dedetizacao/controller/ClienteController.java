@@ -17,8 +17,11 @@ public class ClienteController {
     }
 
     @GetMapping
-    public List<Cliente> listarTodos(){
-        return clienteService.listarTodos();
+    public List<ClienteDto> listar() {
+        return clienteService.listarTodos()
+                .stream()
+                .map(c -> clienteService.toDTO(c))
+                .toList();
     }
 
     @PostMapping
@@ -29,20 +32,13 @@ public class ClienteController {
 
         return clienteService.toDTO(cliente);
     }
-    @PutMapping("/{clienteId}")
-    public Cliente atualizarCliente(
-        @PathVariable Long empresaId,
-        @PathVariable Long clienteId,
-        @RequestBody Cliente cliente) {
+    @PutMapping("/{id}")
+    public Cliente atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
+        return clienteService.atualizar(id, cliente);
+    }
 
-    return clienteService.atualizar(empresaId, clienteId, cliente);
-}
-
-    @DeleteMapping("/{clienteId}")
-    public void deletarCliente(
-        @PathVariable Long empresaId,
-        @PathVariable Long clienteId) {
-
-    clienteService.deletar(empresaId, clienteId);
-}
+    @DeleteMapping("/{id}")
+    public void deletar(@PathVariable Long id) {
+        clienteService.deletar(id);
+    }
 }
