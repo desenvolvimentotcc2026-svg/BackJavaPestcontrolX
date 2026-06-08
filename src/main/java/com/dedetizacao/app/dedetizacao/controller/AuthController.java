@@ -7,6 +7,7 @@ import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.*;
+import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -79,7 +80,7 @@ public class AuthController {
         user.setNome(req.getNome());
         user.setEmail(req.getEmail());
         user.setSenha(passwordEncoder.encode(req.getSenha()));
-        user.setTipo(req.getTipo());
+        user.setTipo(TipoUsuario.valueOf(req.getTipo()));
 
         Usuario salvo = usuarioService.salvar(user);
 
