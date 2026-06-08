@@ -93,7 +93,7 @@ public class AuthController {
                 Cliente c = new Cliente();
                 c.setNome(req.getNome());
                 c.setEmail(req.getEmail());
-                c.setEmpresaId(1L); // fix temporário seguro
+                c.setEmpresa(empresa); // fix temporário seguro
 
                 clienteService.salvar(c);
             }
