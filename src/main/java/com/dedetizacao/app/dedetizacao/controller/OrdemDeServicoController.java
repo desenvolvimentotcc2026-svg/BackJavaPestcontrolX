@@ -127,4 +127,12 @@ public class OrdemDeServicoController {
             messagingTemplate.convertAndSend("/topic/tecnico/" + ordem.getFuncionario(), ordem);
         }
     }
+
+    public List<OrdemDeServico> listarAtivasPorCliente(Long clienteId) {
+        return repository.findAtivasByClienteId(clienteId);
+    }
+
+    public List<OrdemDeServico> listarAtivasPorEmpresa(Long empresaId) {
+        return repository.findAtivasByEmpresaId(empresaId);
+    }
 }
