@@ -5,6 +5,7 @@ import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
