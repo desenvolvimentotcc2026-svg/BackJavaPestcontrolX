@@ -95,4 +95,3 @@ public class FuncionarioService {
             return repository.save(f);
         }
     }
-}
