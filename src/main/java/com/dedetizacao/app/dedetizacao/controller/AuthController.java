@@ -8,6 +8,8 @@ import com.dedetizacao.app.dedetizacao.Service.EmpresaService;
 import com.dedetizacao.app.dedetizacao.Service.ClienteService;
 import com.dedetizacao.app.dedetizacao.Service.FuncionarioService;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
+import com.dedetizacao.app.dedetizacao.Model.Funcionario;
+
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
