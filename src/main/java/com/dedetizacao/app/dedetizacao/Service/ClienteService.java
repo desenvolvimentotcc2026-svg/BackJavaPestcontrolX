@@ -1,12 +1,5 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import com.dedetizacao.app.dedetizacao.Model.Cliente;
-import com.dedetizacao.app.dedetizacao.Model.Empresa;
-import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
-import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
@@ -28,25 +21,41 @@ public class ClienteService {
         this.empresaRepository = empresaRepository;
     }
 
-    public Cliente salvar(Cliente cliente) {
-        return clienteRepository.save(cliente);
-    }
-
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();
     }
 
+    public Cliente buscarPorId(Long id) {
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
+
     public Cliente criarFromDto(ClienteDto dto, Long empresaId) {
-
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
-
         Cliente c = new Cliente();
         c.setNome(dto.getNome());
         c.setEmail(dto.getEmail());
         c.setTelefone(dto.getTelefone());
-        c.setEmpresa(empresa);
+
+        if (empresaId != null) {
+            Empresa empresa = empresaRepository.findById(empresaId).orElse(null);
+            c.setEmpresa(empresa);
+        }
 
         return clienteRepository.save(c);
+    }
+
+    public Cliente atualizar(Long id, Cliente clienteAtualizado) {
+        Cliente cliente = buscarPorId(id);
+        cliente.setNome(clienteAtualizado.getNome());
+        cliente.setEmail(clienteAtualizado.getEmail());
+        cliente.setTelefone(clienteAtualizado.getTelefone());
+        cliente.setEndereco(clienteAtualizado.getEndereco());
+        return clienteRepository.save(cliente);
+    }
+
+    public void deletar(Long id) {
+        if (clienteRepository.existsById(id)) {
+            clienteRepository.deleteById(id);
+        }
     }
 }

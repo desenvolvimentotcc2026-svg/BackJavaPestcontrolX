@@ -2,7 +2,9 @@ package com.dedetizacao.app.dedetizacao.controller;
 
 import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Dto.LoginRequest;
-import com.dedetizacao.app.dedetizacao.Model.*;
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
+import com.dedetizacao.app.dedetizacao.Model.Usuario;
+import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.http.*;
@@ -83,23 +85,27 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        Long empresaId = req.getEmpresaId(); // só se existir no DTO
+        // Convertendo de forma segura o CNPJ em Long para usar como EmpresaId no Funcionario
+        Long empresaId = 0L;
+        if (req.getCnpj() != null && !req.getCnpj().isEmpty()) {
+            try {
+                empresaId = Long.valueOf(req.getCnpj());
+            } catch (NumberFormatException ignored) {}
+        }
 
         if (user.getTipo() == TipoUsuario.EMPRESA) {
-
-            empresaService.criar(salvo.getId());
+            // Se for empresa, cria uma empresa básica e amarra ao ID
+            empresaService.salvarFromRegister(req, salvo.getId());
 
         } else if (user.getTipo() == TipoUsuario.CLIENTE) {
-
             ClienteDto dto = new ClienteDto();
             dto.setNome(req.getNome());
             dto.setEmail(req.getEmail());
-            dto.setTelefone(req.getTelefone());
-
-            clienteService.criarFromDto(dto, empresaId);
+            dto.setTelefone("Não informado");
+            // O cliente se vincula à empresa depois no app
+            clienteService.criarFromDto(dto, null);
 
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
-
             funcionarioService.criarFromRegister(req, empresaId);
         }
 
