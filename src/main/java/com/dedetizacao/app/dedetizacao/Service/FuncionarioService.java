@@ -4,6 +4,7 @@ import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
 import org.springframework.stereotype.Service;
