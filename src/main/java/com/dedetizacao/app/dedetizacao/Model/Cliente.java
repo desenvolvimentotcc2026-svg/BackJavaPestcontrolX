@@ -9,6 +9,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Table(name = "clientes")
 public class Cliente {
 
+    private Long empresaId;
+
+    public Long getEmpresaId() {
+        return empresaId;
+    }
+
+    public void setEmpresaId(Long empresaId) {
+        this.empresaId = empresaId;
+    }
+
 
     @Id // Criando a chave primária de clientes//
     @GeneratedValue(strategy = GenerationType.IDENTITY) /* coloca a responsabilidade de auto-incrementar o id.*/

@@ -86,8 +86,13 @@ public class AuthController {
         switch (user.getTipo()) {
 
             case EMPRESA -> empresaService.criar(salvo.getId());
+            
+            Cliente c = new Cliente();
+            c.setNome(req.getNome());
+            c.setEmail(req.getEmail());
+            c.setEmpresaId(1L); // TEMP fix seguro
 
-            case CLIENTE -> clienteService.criar(salvo.getId(), req);
+            clienteService.salvar(c);
 
             case FUNCIONARIO -> funcionarioService.criar(salvo.getId(), req);
         }
