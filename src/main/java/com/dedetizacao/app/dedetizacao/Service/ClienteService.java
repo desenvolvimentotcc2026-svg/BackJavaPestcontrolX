@@ -1,14 +1,12 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
-import com.dedetizacao.app.dedetizacao.Model.Empresa;
-import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
-import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ClienteService {
@@ -40,12 +38,15 @@ public class ClienteService {
         repository.deleteById(id);
     }
 
-    // 🔥 REGISTRO SIMPLES
-    public Cliente criar(Long usuarioId, RegisterRequest req) {
+    // 🔥 NOVO MÉTODO (RESOLVE SEU ERRO)
+    public Cliente salvar(ClienteDto dto, Long empresaId) {
         Cliente c = new Cliente();
-        c.setUsuarioId(usuarioId);
-        c.setNome(req.getNome());
-        c.setEmail(req.getEmail());
+
+        c.setNome(dto.getNome());
+        c.setEmail(dto.getEmail());
+        c.setTelefone(dto.getTelefone());
+        c.setEmpresaId(empresaId);
+
         return repository.save(c);
     }
 }
