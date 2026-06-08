@@ -143,33 +143,21 @@ public class AuthController {
      * 3. CADASTRO (Registro de novos usuários)
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest req) {
+    public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest request) {
 
-        if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já existe"));
+        if (usuarioService.buscarPorEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já está em uso"));
         }
 
         Usuario usuario = new Usuario();
+        usuario.setNome(request.getNome());
+        usuario.setEmail(request.getEmail());
+        usuario.setSenha(passwordEncoder.encode(request.getSenha()));
+        usuario.setTipo(request.getTipo());
 
-        usuario.setNome(req.getNome());
-        usuario.setEmail(req.getEmail());
-        usuario.setSenha(passwordEncoder.encode(req.getSenha()));
+        usuarioService.salvar(usuario);
 
-        if (req.getTipo() != null) {
-            usuario.setTipo(Enum.valueOf(usuario.getTipo().getClass(), req.getTipo()));
-        }
-
-        usuario.setCep(req.getCep());
-        usuario.setRua(req.getRua());
-        usuario.setBairro(req.getBairro());
-        usuario.setNumero(req.getNumero());
-
-        Usuario salvo = usuarioService.salvar(usuario);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "id", salvo.getId(),
-                "email", salvo.getEmail()
-        ));
+        return ResponseEntity.ok(Map.of("message", "Usuário criado com sucesso"));
     }
 
     /**
