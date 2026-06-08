@@ -32,6 +32,12 @@ public class ClienteController {
 
         return clienteService.toDTO(cliente);
     }
+
+    @PostMapping
+    public Cliente salvar(@RequestBody Cliente cliente, @RequestParam Long empresaId) {
+        return clienteService.salvar(cliente, empresaId);
+    }
+    
     @PutMapping("/{id}")
     public Cliente atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
         return clienteService.atualizar(id, cliente);
