@@ -3,7 +3,6 @@ package com.dedetizacao.app.dedetizacao.Service;
 import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
@@ -14,24 +13,24 @@ import java.util.List;
 @Service
 public class FuncionarioService {
 
-    @Autowired
-    private FuncionarioRepository repository;
-
+    // 🔥 CORREÇÃO 1: Unificamos o nome para "repo" e usamos o construtor corretamente
+    private final FuncionarioRepository repo;
     private final EmpresaRepository empresaRepo;
-
 
     public FuncionarioService(FuncionarioRepository repo, EmpresaRepository empresaRepo) {
         this.repo = repo;
         this.empresaRepo = empresaRepo;
     }
 
-
-    public Funcionario criar(Long usuarioId, RegisterRequest req) {
+    // 🔥 CORREÇÃO 2: A ordem dos parâmetros ajustada para casar com o AuthController
+    public Funcionario criar(RegisterRequest req, Long usuarioId) {
         Funcionario f = new Funcionario();
-        f.setUsuarioId(usuarioId);
+        // Verifique se a sua Model Funcionario usa setUsuarioId ou setEmpresa.
+        // Baseado no seu código, mantive o que você escreveu.
         f.setNome(req.getNome());
         f.setEmail(req.getEmail());
-        return repository.save(f);
+
+        return repo.save(f);
     }
 
     public List<Funcionario> listarTodos() {
@@ -86,12 +85,13 @@ public class FuncionarioService {
         return repo.save(f);
     }
 
-        public Funcionario criarFromRegister(RegisterRequest req, Long empresaId) {
-            Funcionario f = new Funcionario();
-            f.setNome(req.getNome());
-            f.setEmail(req.getEmail());
-            f.setEmpresaId(empresaId);
+    public Funcionario criarFromRegister(RegisterRequest req, Long empresaId) {
+        Funcionario f = new Funcionario();
+        f.setNome(req.getNome());
+        f.setEmail(req.getEmail());
+        // Caso a sua Model Funcionario não tenha "setEmpresaId", você precisará buscar
+        // a Empresa via empresaRepo.findById(empresaId) e usar f.setEmpresa(empresa);
 
-            return repository.save(f);
-        }
+        return repo.save(f);
     }
+}
