@@ -143,15 +143,33 @@ public class AuthController {
      * 3. CADASTRO (Registro de novos usuários)
      */
     @PostMapping("/register")
-    public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
-        if (usuarioService.buscarPorEmail(usuario.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já está em uso por outra conta."));
+    public ResponseEntity<?> registrarUsuario(@RequestBody RegisterRequest req) {
+
+        if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já existe"));
         }
 
-        usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        Usuario usuario = new Usuario();
+
+        usuario.setNome(req.getNome());
+        usuario.setEmail(req.getEmail());
+        usuario.setSenha(passwordEncoder.encode(req.getSenha()));
+
+        if (req.getTipo() != null) {
+            usuario.setTipo(Enum.valueOf(usuario.getTipo().getClass(), req.getTipo()));
+        }
+
+        usuario.setCep(req.getCep());
+        usuario.setRua(req.getRua());
+        usuario.setBairro(req.getBairro());
+        usuario.setNumero(req.getNumero());
+
         Usuario salvo = usuarioService.salvar(usuario);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(salvo);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "id", salvo.getId(),
+                "email", salvo.getEmail()
+        ));
     }
 
     /**
