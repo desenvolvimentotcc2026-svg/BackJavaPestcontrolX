@@ -19,16 +19,18 @@ public class ClienteService {
         this.empresaRepo = empresaRepo;
     }
 
-    public Cliente salvar(ClienteDto dto, Long empresaId) {
+    public Cliente salvar(Cliente cliente) {
 
+        Empresa empresa = null;
 
-        Cliente c = new Cliente();
-        c.setNome(dto.getNome());
-        c.setEmail(dto.getEmail());
-        c.setTelefone(dto.getTelefone());
-        c.setEmpresa(empresa);
+        if (cliente.getEmpresaId() != null) {
+            empresa = empresaRepository.findById(cliente.getEmpresaId())
+                    .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        }
 
-        return repo.save(c);
+        cliente.setEmpresa(empresa);
+
+        return clienteRepository.save(cliente);
     }
 
     public List<Cliente> listarTodos() {
