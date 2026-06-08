@@ -1,28 +1,71 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ClienteService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
+    private final EmpresaRepository empresaRepository;
 
-    @Autowired
-    private EmpresaRepository empresaRepository;
+    public ClienteService(ClienteRepository clienteRepository, EmpresaRepository empresaRepository) {
+        this.clienteRepository = clienteRepository;
+        this.empresaRepository = empresaRepository;
+    }
 
-    public Cliente salvar(Cliente cliente, Long empresaId) {
+    public List<Cliente> listarTodos() {
+        return clienteRepository.findAll();
+    }
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+    public void salvarFromRegister(RegisterRequest req, Long usuarioId) {
+        Cliente cliente = new Cliente();
+        cliente.setNome(req.getNome());
+        cliente.setEmail(req.getEmail());
+        cliente.setTelefone("Não informado");
+        clienteRepository.save(cliente);
+    }
 
+    public Cliente salvar(ClienteDto dto, Long empresaId) {
+        Empresa empresa = empresaRepository.findById(empresaId).orElse(null);
+        Cliente cliente = new Cliente();
+        cliente.setNome(dto.getNome());
+        cliente.setEmail(dto.getEmail());
+        cliente.setTelefone(dto.getTelefone());
         cliente.setEmpresa(empresa);
-
         return clienteRepository.save(cliente);
+    }
+
+    public Cliente buscarPorId(Long id) {
+        return clienteRepository.findById(id).orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
+
+    public Cliente atualizar(Long id, Cliente clienteAtualizado) {
+        Cliente cliente = buscarPorId(id);
+        cliente.setNome(clienteAtualizado.getNome());
+        cliente.setEmail(clienteAtualizado.getEmail());
+        cliente.setTelefone(clienteAtualizado.getTelefone());
+        cliente.setEndereco(clienteAtualizado.getEndereco());
+        return clienteRepository.save(cliente);
+    }
+
+    public void deletar(Long id) {
+        clienteRepository.deleteById(id);
+    }
+
+    public ClienteDto toDTO(Cliente cliente) {
+        ClienteDto dto = new ClienteDto();
+        dto.setId(cliente.getId());
+        dto.setNome(cliente.getNome());
+        dto.setEmail(cliente.getEmail());
+        dto.setTelefone(cliente.getTelefone());
+        return dto;
     }
 }

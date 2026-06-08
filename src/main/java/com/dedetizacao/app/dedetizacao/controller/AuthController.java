@@ -4,9 +4,6 @@ import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Dto.LoginRequest;
 import com.dedetizacao.app.dedetizacao.Model.Usuario;
 import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
-import com.dedetizacao.app.dedetizacao.Model.Empresa;
-import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
-import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -46,22 +43,18 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(request.getEmail());
 
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Usuário inválido"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Usuário inválido"));
         }
 
         Usuario user = userOpt.get();
 
         if (!passwordEncoder.matches(request.getSenha(), user.getSenha())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Senha inválida"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Senha inválida"));
         }
 
-        // 🔥 CORREÇÃO: Passando a String (Email) em vez do objeto Usuario inteiro
         String token = jwtService.gerarToken(user.getEmail());
 
         return ResponseEntity.ok(Map.of(
@@ -74,9 +67,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email já existe");
+            return ResponseEntity.badRequest().body(Map.of("message", "Email já existe"));
         }
 
         Usuario user = new Usuario();
@@ -87,24 +79,12 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        switch (req.getTipo()) {
-
-            case "EMPRESA":
-                Empresa emp = new Empresa();
-                emp.setNome(req.getNome());
-                emp.setEmail(req.getEmail());
-                empresaService.salvar(emp);
-                break;
-
-            case "CLIENTE":
-                clienteService.salvar(new ClienteDto(), salvo.getId());
-                break;
-
-            case "FUNCIONARIO":
-                funcionarioService.criar(new FuncionarioDto(), salvo.getId());
-                break;
+        switch (user.getTipo()) {
+            case EMPRESA -> empresaService.salvarFromRegister(req, salvo.getId());
+            case CLIENTE -> clienteService.salvarFromRegister(req, salvo.getId());
+            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId());
         }
 
-        return ResponseEntity.ok("Cadastro realizado com sucesso");
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Cadastro realizado com sucesso"));
     }
 }

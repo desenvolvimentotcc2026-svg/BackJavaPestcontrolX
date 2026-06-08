@@ -1,50 +1,47 @@
 package com.dedetizacao.app.dedetizacao.controller;
+
 import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Service.ClienteService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/empresas/{empresaId}/clientes")
+@RequestMapping("/api/clientes")
+@CrossOrigin("*")
 public class ClienteController {
 
     private final ClienteService clienteService;
 
-    public ClienteController(ClienteService clienteService){
+    public ClienteController(ClienteService clienteService) {
         this.clienteService = clienteService;
     }
 
     @GetMapping
-    public List<ClienteDto> listar() {
-        return clienteService.listarTodos()
-                .stream()
-                .map(c -> clienteService.toDTO(c))
-                .toList();
+    public ResponseEntity<List<Cliente>> listarTodos() {
+        return ResponseEntity.ok(clienteService.listarTodos());
     }
 
-    @PostMapping
-    public ClienteDto criar(@RequestBody ClienteDto dto,
-                            @PathVariable Long empresaId){
-
-        Cliente cliente = clienteService.salvar(dto, empresaId);
-
-        return clienteService.toDTO(cliente);
+    @GetMapping("/{id}")
+    public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(clienteService.buscarPorId(id));
     }
 
-    @PostMapping
-    public Cliente salvar(@RequestBody Cliente cliente, @RequestParam Long empresaId) {
-        return clienteService.salvar(cliente, empresaId);
+    @PostMapping("/empresa/{empresaId}")
+    public ResponseEntity<Cliente> salvar(@RequestBody ClienteDto dto, @PathVariable Long empresaId) {
+        return ResponseEntity.ok(clienteService.salvar(dto, empresaId));
     }
-    
+
     @PutMapping("/{id}")
-    public Cliente atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
-        return clienteService.atualizar(id, cliente);
+    public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody Cliente clienteAtualizado) {
+        return ResponseEntity.ok(clienteService.atualizar(id, clienteAtualizado));
     }
 
     @DeleteMapping("/{id}")
-    public void deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
         clienteService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
