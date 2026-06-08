@@ -1,6 +1,5 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
@@ -43,16 +42,16 @@ public class ClienteService {
         repository.deleteById(id);
     }
 
-    // fluxo register LIMPO
-    public Cliente criarFromRegister(RegisterRequest req, Long empresaId) {
-        Cliente c = new Cliente();
-        c.setNome(req.getNome());
-        c.setEmail(req.getEmail());
-        c.setTelefone(req.getTelefone());
+    // ✔ usado pelo AuthController (REGISTER)
+    public Cliente criarFromRegister(String nome, String email, String telefone, Long empresaId) {
 
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
+        Cliente c = new Cliente();
+        c.setNome(nome);
+        c.setEmail(email);
+        c.setTelefone(telefone);
         c.setEmpresa(empresa);
 
         return repository.save(c);
