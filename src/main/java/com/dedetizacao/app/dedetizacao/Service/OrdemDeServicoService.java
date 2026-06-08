@@ -11,113 +11,35 @@ import java.util.List;
 public class OrdemDeServicoService {
 
     private final OrdemDeServicoRepository repository;
-    private final OrdemDeServicoService service;
 
-    public OrdemDeServicoService(OrdemDeServicoRepository repository, OrdemDeServicoService service) {
+    public OrdemDeServicoService(OrdemDeServicoRepository repository) {
         this.repository = repository;
-        this.service = service;
     }
 
     public List<OrdemDeServico> listar() {
         return repository.findAll();
     }
 
-    public OrdemDeServico buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ordem não encontrada: " + id));
+    public List<OrdemDeServico> listarPorCliente(Long id) {
+        return repository.findByClienteIdOrderByIdDesc(id);
     }
 
-    public List<OrdemDeServico> listarPorEmpresa(Long empresaId) {
-        return repository.findByEmpresaIdOrderByIdDesc(empresaId);
+    public List<OrdemDeServico> listarPorEmpresa(Long id) {
+        return repository.findByEmpresaIdOrderByIdDesc(id);
     }
 
-    public List<OrdemDeServico> listarPorCliente(Long clienteId) {
-        return repository.findByClienteIdOrderByIdDesc(clienteId);
+    public List<OrdemDeServico> listarAtivasPorCliente(Long id) {
+        return repository.findAtivasByClienteId(id);
     }
 
-    public List<OrdemDeServico> listarPorFuncionario(Long funcionarioId) {
-        return repository.findByFuncionarioId(String.valueOf(funcionarioId));
+    public List<OrdemDeServico> listarAtivasPorEmpresa(Long id) {
+        return repository.findAtivasByEmpresaId(id);
     }
 
-    public List<OrdemDeServico> listarPorStatus(String status) {
-        return repository.findByStatus(status);
-    }
-
-    public OrdemDeServico salvar(OrdemDeServico ordem) {
-        if (ordem.getStatus() == null) {
-            ordem.setStatus("PENDENTE");
-        }
-        if (ordem.getDataAbertura() == null) {
-            ordem.setDataAbertura(LocalDateTime.now());
-        }
-        return repository.save(ordem);
-    }
-
-    public OrdemDeServico aceitar(Long id, Long funcionarioId) {
-        OrdemDeServico ordem = buscarPorId(id);
-
-        ordem.setStatus("ACEITA");
-
-        if (funcionarioId != null) {
-            ordem.setFuncionario(String.valueOf(funcionarioId));
-        }
-
-        return repository.save(ordem);
-    }
-
-    public OrdemDeServico iniciar(Long id) {
-        OrdemDeServico ordem = buscarPorId(id);
-
-        ordem.setStatus("EM_ROTA");
-
-        if (ordem.getDataInicio() == null) {
-            ordem.setDataInicio(LocalDateTime.now());
-        }
-
-        return repository.save(ordem);
-    }
-
-    public OrdemDeServico finalizar(Long id, OrdemDeServico dados) {
-        OrdemDeServico ordem = buscarPorId(id);
-
-        ordem.setStatus("FINALIZADA");
-        ordem.setDataFinalizacao(LocalDateTime.now());
-
-        if (dados != null) {
-            if (dados.getProdutoAplicado() != null)
-                ordem.setProdutoAplicado(dados.getProdutoAplicado());
-
-            if (dados.getObservacaoTecnica() != null)
-                ordem.setObservacaoTecnica(dados.getObservacaoTecnica());
-
-            if (dados.getDescricao() != null)
-                ordem.setDescricao(dados.getDescricao());
-
-            if (dados.getStringFotoBase64() != null)
-                ordem.setStringFotoBase64(dados.getStringFotoBase64());
-        }
-
-        return repository.save(ordem);
-    }
-
-    public OrdemDeServico atualizarGps(Long id, Double lat, Double lng) {
-        OrdemDeServico ordem = buscarPorId(id);
-
-        ordem.setLatitude(lat);
-        ordem.setLongitude(lng);
-
-        return repository.save(ordem);
-    }
-
-    public void deletar(Long id) {
-        repository.deleteById(id);
-    }
-
-    public List<OrdemDeServico> listarAtivasPorCliente(Long clienteId) {
-        return repository.findAtivasByClienteId(clienteId);
-    }
-
-    public List<OrdemDeServico> listarAtivasPorEmpresa(Long empresaId) {
-        return repository.findAtivasByEmpresaId(empresaId);
+    public OrdemDeServico salvar(OrdemDeServico o) {
+        if (o.getStatus() == null) o.setStatus("PENDENTE");
+        if (o.getDataAbertura() == null) o.setDataAbertura(LocalDateTime.now());
+        return repository.save(o);
     }
 }
+
