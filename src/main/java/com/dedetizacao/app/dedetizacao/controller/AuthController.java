@@ -317,6 +317,10 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> dashboard(
             @PathVariable Long empresaId
     ) {
+        return ResponseEntity.ok(Map.of(
+                "empresaId", empresaId,
+                "status", "online"
+        ));
     }
 
 }
