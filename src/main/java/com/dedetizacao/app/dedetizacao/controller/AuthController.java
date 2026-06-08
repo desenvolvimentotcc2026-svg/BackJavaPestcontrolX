@@ -83,15 +83,13 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        Long empresaId = 1L; // 🔥 FIX TEMPORÁRIO (não quebra build)
-
         switch (user.getTipo()) {
 
-            case EMPRESA -> empresaService.criar(req, salvo.getId());
+            case EMPRESA -> empresaService.criar(salvo.getId());
 
-            case CLIENTE -> clienteService.criar(req, salvo.getId(), empresaId);
+            case CLIENTE -> clienteService.criar(salvo.getId(), req);
 
-            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId(), empresaId);
+            case FUNCIONARIO -> funcionarioService.criar(salvo.getId(), req);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -35,7 +35,17 @@ public class Funcionario {
     @JsonIgnore // Impede que a Api trave em um loop infinito ao converter os dados para JSON.
     private List<Servico> servicos;
 
-    private String status; // "ONLINE" ou "OFFLINE"
+    private String status;
+
+    private Long usuarioId;
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }// "ONLINE" ou "OFFLINE"
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

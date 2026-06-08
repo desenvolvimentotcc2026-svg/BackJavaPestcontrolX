@@ -33,12 +33,24 @@ public class Cliente {
 
 
 
+
+
     private String senha;
 
 
     @OneToMany(mappedBy = "cliente") // Define o lado inverso da relação, "mappedBy" indica que o controle está no campo 'cliente' da classe Servico.
     @JsonIgnore // Crucial porque Impede que o JSON entre em loop infinito ao tentar listar serviços que listam clientes.
     private List<Servico> servicos;
+
+    private Long usuarioId;
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
 
     public Cliente() {}
 

@@ -6,19 +6,36 @@ import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
+
+
 @Service
 public class EmpresaService {
 
     @Autowired
     private EmpresaRepository repository;
 
-    public Empresa criar(RegisterRequest req, Long usuarioId) {
+    public Empresa salvar(Empresa e) {
+        return repository.save(e);
+    }
 
+    public List<Empresa> listarTodos() {
+        return repository.findAll();
+    }
+
+    public Empresa buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+    }
+
+    public void deletar(Long id) {
+        repository.deleteById(id);
+    }
+
+    // 🔥 CRIAÇÃO SIMPLES NO REGISTER
+    public Empresa criar(Long usuarioId) {
         Empresa e = new Empresa();
-        e.setNome(req.getNome());
-        e.setCnpj(req.getCnpj());
         e.setUsuarioId(usuarioId);
-
         return repository.save(e);
     }
 }

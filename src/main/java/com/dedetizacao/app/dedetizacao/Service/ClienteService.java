@@ -13,21 +13,38 @@ import org.springframework.stereotype.Service;
 public class ClienteService {
 
     @Autowired
-    private ClienteRepository clienteRepository;
+    private ClienteRepository repository;
 
-    @Autowired
-    private EmpresaRepository empresaRepository;
+    public Cliente salvar(Cliente c) {
+        return repository.save(c);
+    }
 
-    public Funcionario criar(RegisterRequest req, Long usuarioId, Long empresaId) {
+    public List<Cliente> listarTodos() {
+        return repository.findAll();
+    }
 
-        Empresa empresa = empresaRepository.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+    public Cliente buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
 
-        Funcionario f = new Funcionario();
-        f.setNome(req.getNome());
-        f.setUsuarioId(usuarioId);
-        f.setEmpresa(empresa);
+    public Cliente atualizar(Long id, Cliente novo) {
+        Cliente c = buscarPorId(id);
+        c.setNome(novo.getNome());
+        c.setEmail(novo.getEmail());
+        return repository.save(c);
+    }
 
-        return repository.save(f);
+    public void deletar(Long id) {
+        repository.deleteById(id);
+    }
+
+    // 🔥 REGISTRO SIMPLES
+    public Cliente criar(Long usuarioId, RegisterRequest req) {
+        Cliente c = new Cliente();
+        c.setUsuarioId(usuarioId);
+        c.setNome(req.getNome());
+        c.setEmail(req.getEmail());
+        return repository.save(c);
     }
 }

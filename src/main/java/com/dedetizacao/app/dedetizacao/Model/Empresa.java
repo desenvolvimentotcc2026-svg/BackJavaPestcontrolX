@@ -18,6 +18,16 @@ public class Empresa {
     private String cnpj;
     private String nome;
 
+    private Long usuarioId;
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
 
     @Column(columnDefinition = "TEXT")
     private String sobre;

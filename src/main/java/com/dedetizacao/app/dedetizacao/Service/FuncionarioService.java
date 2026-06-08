@@ -12,27 +12,25 @@ import java.util.List;
 @Service
 public class FuncionarioService {
 
+    @Autowired
+    private FuncionarioRepository repository;
+
     private final FuncionarioRepository repo;
     private final EmpresaRepository empresaRepo;
+
 
     public FuncionarioService(FuncionarioRepository repo, EmpresaRepository empresaRepo) {
         this.repo = repo;
         this.empresaRepo = empresaRepo;
     }
 
-    public Funcionario criar(FuncionarioDto dto, Long empresaId) {
 
-        Empresa empresa = empresaRepo.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
-
+    public Funcionario criar(Long usuarioId, RegisterRequest req) {
         Funcionario f = new Funcionario();
-        f.setNome(dto.getNome());
-        f.setEmail(dto.getEmail());
-        f.setTelefone(dto.getTelefone());
-        f.setStatus("OFFLINE");
-        f.setEmpresa(empresa);
-
-        return repo.save(f);
+        f.setUsuarioId(usuarioId);
+        f.setNome(req.getNome());
+        f.setEmail(req.getEmail());
+        return repository.save(f);
     }
 
     public List<Funcionario> listarTodos() {
