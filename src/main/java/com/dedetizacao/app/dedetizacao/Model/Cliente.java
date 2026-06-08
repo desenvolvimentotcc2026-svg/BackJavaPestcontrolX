@@ -8,8 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "clientes")
 public class Cliente {
-
-    private Long empresaId;
+    
 
     public Long getEmpresaId() {
         return empresaId;
