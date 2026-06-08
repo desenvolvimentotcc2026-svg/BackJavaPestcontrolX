@@ -100,7 +100,7 @@ public class AuthController {
             }
 
             case FUNCIONARIO -> {
-                funcionarioService.criar(req, salvo.getId());
+                funcionarioService.criarFromRegister(req, salvo.getId());
             }
         }
 
