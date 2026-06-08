@@ -83,24 +83,24 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
+        Long empresaId = 1L; // 🔥 TEMPORÁRIO (evita crash)
+
         switch (user.getTipo()) {
 
             case EMPRESA -> {
-                empresaService.criar(salvo.getId());
+                empresaService.salvarFromRegister(req, salvo.getId());
             }
 
             case CLIENTE -> {
                 Cliente c = new Cliente();
                 c.setNome(req.getNome());
                 c.setEmail(req.getEmail());
-                Empresa empresa = empresaRepository.findById(empresaId)
-                        .orElseThrow(() -> new RuntimeException("Empresa não encontrada")); // fix temporário seguro
 
                 clienteService.salvar(c);
             }
 
             case FUNCIONARIO -> {
-                funcionarioService.criar(salvo.getId(), req);
+                funcionarioService.criar(req, salvo.getId());
             }
         }
 

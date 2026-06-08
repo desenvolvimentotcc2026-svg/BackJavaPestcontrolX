@@ -2,6 +2,7 @@ package com.dedetizacao.app.dedetizacao.Service;
 
 import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
+import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class ClienteService {
         Cliente c = buscarPorId(id);
         c.setNome(novo.getNome());
         c.setEmail(novo.getEmail());
+        c.setTelefone(novo.getTelefone());
         return repository.save(c);
     }
 
@@ -42,9 +44,10 @@ public class ClienteService {
         repository.deleteById(id);
     }
 
+    // DTO + empresaId (CORRETO)
     public Cliente salvar(ClienteDto dto, Long empresaId) {
-        Cliente c = new Cliente();
 
+        Cliente c = new Cliente();
         c.setNome(dto.getNome());
         c.setEmail(dto.getEmail());
         c.setTelefone(dto.getTelefone());
