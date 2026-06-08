@@ -7,6 +7,7 @@ import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.EnderecoCliente;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
