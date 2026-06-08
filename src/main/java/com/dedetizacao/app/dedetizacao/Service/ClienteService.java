@@ -7,53 +7,46 @@ import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
+import com.dedetizacao.app.dedetizacao.Model.Cliente;
+import com.dedetizacao.app.dedetizacao.Model.Empresa;
+import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
+import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 @Service
 public class ClienteService {
 
-    @Autowired
-    private ClienteRepository repository;
+    private final ClienteRepository clienteRepository;
+    private final EmpresaRepository empresaRepository;
 
-    @Autowired
-    private EmpresaRepository empresaRepository;
+    public ClienteService(ClienteRepository clienteRepository,
+                          EmpresaRepository empresaRepository) {
+        this.clienteRepository = clienteRepository;
+        this.empresaRepository = empresaRepository;
+    }
 
-    public Cliente salvar(Cliente c) {
-        return repository.save(c);
+    public Cliente salvar(Cliente cliente) {
+        return clienteRepository.save(cliente);
     }
 
     public List<Cliente> listarTodos() {
-        return repository.findAll();
+        return clienteRepository.findAll();
     }
 
-    public Cliente buscarPorId(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-    }
-
-    public Cliente atualizar(Long id, Cliente novo) {
-        Cliente c = buscarPorId(id);
-        c.setNome(novo.getNome());
-        c.setEmail(novo.getEmail());
-        return repository.save(c);
-    }
-
-    public void deletar(Long id) {
-        repository.deleteById(id);
-    }
-
-    // ✔ usado pelo AuthController (REGISTER)
-    public Cliente criarFromRegister(String nome, String email, String telefone, Long empresaId) {
+    public Cliente criarFromDto(ClienteDto dto, Long empresaId) {
 
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
         Cliente c = new Cliente();
-        c.setNome(nome);
-        c.setEmail(email);
-        c.setTelefone(telefone);
+        c.setNome(dto.getNome());
+        c.setEmail(dto.getEmail());
+        c.setTelefone(dto.getTelefone());
         c.setEmpresa(empresa);
 
-        return repository.save(c);
+        return clienteRepository.save(c);
     }
 }

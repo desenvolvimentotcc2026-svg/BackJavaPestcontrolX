@@ -83,7 +83,7 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        Long empresaId = req.getEmpresaId(); // IMPORTANTE: vem do front
+        Long empresaId = req.getEmpresaId(); // só se existir no DTO
 
         if (user.getTipo() == TipoUsuario.EMPRESA) {
 
@@ -91,7 +91,12 @@ public class AuthController {
 
         } else if (user.getTipo() == TipoUsuario.CLIENTE) {
 
-            clienteService.criarFromRegister(req, empresaId);
+            ClienteDto dto = new ClienteDto();
+            dto.setNome(req.getNome());
+            dto.setEmail(req.getEmail());
+            dto.setTelefone(req.getTelefone());
+
+            clienteService.criarFromDto(dto, empresaId);
 
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
 
