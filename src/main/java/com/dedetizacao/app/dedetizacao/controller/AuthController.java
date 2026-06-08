@@ -88,7 +88,7 @@ public class AuthController {
         switch (user.getTipo()) {
 
             case EMPRESA -> {
-                empresaService.salvarFromRegister(req, salvo.getId());
+                empresaService.criarFromRegister(salvo.getId());
             }
 
             case CLIENTE -> {
