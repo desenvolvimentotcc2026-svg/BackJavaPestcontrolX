@@ -4,6 +4,7 @@ import com.dedetizacao.app.dedetizacao.Dto.AgendamentoDto;
 import com.dedetizacao.app.dedetizacao.Model.Agendamento;
 import com.dedetizacao.app.dedetizacao.Service.AgendamentoService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
 
 
 @RestController
