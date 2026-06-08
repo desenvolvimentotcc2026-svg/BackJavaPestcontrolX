@@ -6,6 +6,7 @@ import com.dedetizacao.app.dedetizacao.Model.Usuario;
 import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
+import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
