@@ -100,6 +100,19 @@ public class ClienteService {
         return dto;
     }
 
+    public Cliente salvarFromRegister(RegisterRequest req, Long usuarioId) {
+
+        Empresa empresa = empresaRepository.findById(Long.valueOf(req.getCnpj()))
+                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+
+        Cliente c = new Cliente();
+        c.setNome(req.getNome());
+        c.setEmail(req.getEmail());
+        c.setEmpresa(empresa);
+
+        return clienteRepository.save(c);
+    }
+
     public Optional<Cliente> buscarPorEmail(String email) {
         return clienteRepository.findByEmail(email);
     }

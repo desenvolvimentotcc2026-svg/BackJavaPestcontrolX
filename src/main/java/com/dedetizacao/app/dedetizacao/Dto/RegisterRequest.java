@@ -5,10 +5,9 @@ public class RegisterRequest {
     private String nome;
     private String email;
     private String senha;
+    private String tipo;
 
-    private String tipo;   // CLIENTE, EMPRESA, FUNCIONARIO
-    private String cnpj;
-
+    private String cnpj;   // usado só empresa/cliente
     private String cep;
     private String rua;
     private String bairro;

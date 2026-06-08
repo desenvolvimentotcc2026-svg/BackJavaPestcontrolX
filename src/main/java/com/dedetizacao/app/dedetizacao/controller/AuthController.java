@@ -6,11 +6,9 @@ import com.dedetizacao.app.dedetizacao.Model.Usuario;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -42,9 +40,6 @@ public class AuthController {
         this.funcionarioService = funcionarioService;
     }
 
-    // =========================
-    // LOGIN
-    // =========================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
 
@@ -72,9 +67,6 @@ public class AuthController {
         ));
     }
 
-    // =========================
-    // REGISTER (FLUXO ÚNICO)
-    // =========================
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
 
@@ -91,15 +83,14 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        // ===== DISPATCH POR TIPO =====
         switch (req.getTipo()) {
 
             case "EMPRESA":
-                empresaService.criar(req, salvo.getId());
+                empresaService.salvarFromRegister(req, salvo.getId());
                 break;
 
             case "CLIENTE":
-                clienteService.criar(req, salvo.getId());
+                clienteService.salvarFromRegister(req, salvo.getId());
                 break;
 
             case "FUNCIONARIO":

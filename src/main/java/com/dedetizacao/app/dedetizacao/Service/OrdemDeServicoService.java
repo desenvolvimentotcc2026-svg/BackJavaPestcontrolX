@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 @Service
 public class OrdemDeServicoService {
 
@@ -20,12 +19,62 @@ public class OrdemDeServicoService {
         return repository.findAll();
     }
 
-    public List<OrdemDeServico> listarPorCliente(Long id) {
-        return repository.findByClienteIdOrderByIdDesc(id);
+    public OrdemDeServico buscarPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ordem não encontrada"));
     }
 
-    public List<OrdemDeServico> listarPorEmpresa(Long id) {
-        return repository.findByEmpresaIdOrderByIdDesc(id);
+    public List<OrdemDeServico> listarPorEmpresa(Long empresaId) {
+        return repository.findByEmpresaIdOrderByIdDesc(empresaId);
+    }
+
+    public List<OrdemDeServico> listarPorCliente(Long clienteId) {
+        return repository.findByClienteIdOrderByIdDesc(clienteId);
+    }
+
+    public List<OrdemDeServico> listarPorFuncionario(Long funcionarioId) {
+        return repository.findByFuncionarioId(String.valueOf(funcionarioId));
+    }
+
+    public List<OrdemDeServico> listarPorStatus(String status) {
+        return repository.findByStatus(status);
+    }
+
+    public OrdemDeServico salvar(OrdemDeServico ordem) {
+        if (ordem.getStatus() == null) ordem.setStatus("PENDENTE");
+        if (ordem.getDataAbertura() == null) ordem.setDataAbertura(LocalDateTime.now());
+        return repository.save(ordem);
+    }
+
+    public OrdemDeServico aceitar(Long id, Long funcionarioId) {
+        OrdemDeServico o = buscarPorId(id);
+        o.setStatus("ACEITA");
+        o.setFuncionario(String.valueOf(funcionarioId));
+        return repository.save(o);
+    }
+
+    public OrdemDeServico iniciar(Long id) {
+        OrdemDeServico o = buscarPorId(id);
+        o.setStatus("EM_ROTA");
+        return repository.save(o);
+    }
+
+    public OrdemDeServico finalizar(Long id, OrdemDeServico dados) {
+        OrdemDeServico o = buscarPorId(id);
+        o.setStatus("FINALIZADA");
+        o.setDataFinalizacao(LocalDateTime.now());
+        return repository.save(o);
+    }
+
+    public OrdemDeServico atualizarGps(Long id, Double lat, Double lng) {
+        OrdemDeServico o = buscarPorId(id);
+        o.setLatitude(lat);
+        o.setLongitude(lng);
+        return repository.save(o);
+    }
+
+    public void deletar(Long id) {
+        repository.deleteById(id);
     }
 
     public List<OrdemDeServico> listarAtivasPorCliente(Long id) {
@@ -35,11 +84,4 @@ public class OrdemDeServicoService {
     public List<OrdemDeServico> listarAtivasPorEmpresa(Long id) {
         return repository.findAtivasByEmpresaId(id);
     }
-
-    public OrdemDeServico salvar(OrdemDeServico o) {
-        if (o.getStatus() == null) o.setStatus("PENDENTE");
-        if (o.getDataAbertura() == null) o.setDataAbertura(LocalDateTime.now());
-        return repository.save(o);
-    }
 }
-

@@ -23,6 +23,14 @@ public class EmpresaService {
         return empresaRepository.save(empresa);
     }
 
+    public Empresa salvarFromRegister(RegisterRequest req, Long usuarioId) {
+        Empresa e = new Empresa();
+        e.setNome(req.getNome());
+        e.setCnpj(req.getCnpj());
+        e.setEmail(req.getEmail());
+        return empresaRepository.save(e);
+    }
+
     public Empresa buscarporid(Long id) {
         return empresaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Erro ao encontrar a empresa!"));
