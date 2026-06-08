@@ -4,6 +4,8 @@ import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Dto.LoginRequest;
 import com.dedetizacao.app.dedetizacao.Model.Usuario;
 import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
+import com.dedetizacao.app.dedetizacao.Model.Empresa;
+import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
