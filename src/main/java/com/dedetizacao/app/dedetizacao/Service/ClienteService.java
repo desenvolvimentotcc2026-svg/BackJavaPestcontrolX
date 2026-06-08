@@ -6,6 +6,7 @@ import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
