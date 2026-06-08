@@ -1,6 +1,7 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
 import com.dedetizacao.app.dedetizacao.Dto.ClienteDto;
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.ClienteRepository;
@@ -25,8 +26,16 @@ public class ClienteService {
         return clienteRepository.findAll();
     }
 
-    public Cliente salvar(ClienteDto dto, Long empresaId) {
+    // 🔥 CORREÇÃO: Adicionado o método exigido pelo AuthController
+    public void salvarFromRegister(RegisterRequest req, Long usuarioId) {
+        Cliente cliente = new Cliente();
+        cliente.setNome(req.getNome());
+        cliente.setEmail(req.getEmail());
+        cliente.setTelefone("Não informado");
+        clienteRepository.save(cliente);
+    }
 
+    public Cliente salvar(ClienteDto dto, Long empresaId) {
         Empresa empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
 
@@ -55,8 +64,18 @@ public class ClienteService {
         return clienteRepository.save(cliente);
     }
 
+    // 🔥 CORREÇÃO: Sobrecarga para o ClienteController que está passando (empresaId, clienteId)
+    public Cliente atualizar(Long empresaId, Long clienteId, Cliente clienteAtualizado) {
+        return atualizar(clienteId, clienteAtualizado);
+    }
+
     public void deletar(Long id) {
         clienteRepository.deleteById(id);
+    }
+
+    // 🔥 CORREÇÃO: Sobrecarga para o ClienteController que está passando (empresaId, clienteId)
+    public void deletar(Long empresaId, Long clienteId) {
+        deletar(clienteId);
     }
 
     public ClienteDto toDTO(Cliente cliente) {

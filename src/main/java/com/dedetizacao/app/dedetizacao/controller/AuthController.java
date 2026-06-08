@@ -58,7 +58,8 @@ public class AuthController {
                     .body(Map.of("message", "Senha inválida"));
         }
 
-        String token = jwtService.gerarToken(user);
+        // 🔥 CORREÇÃO: Passando a String (Email) em vez do objeto Usuario inteiro
+        String token = jwtService.gerarToken(user.getEmail());
 
         return ResponseEntity.ok(Map.of(
                 "token", token,
@@ -85,11 +86,8 @@ public class AuthController {
         Usuario salvo = usuarioService.salvar(user);
 
         switch (user.getTipo()) {
-
             case EMPRESA -> empresaService.salvarFromRegister(req, salvo.getId());
-
             case CLIENTE -> clienteService.salvarFromRegister(req, salvo.getId());
-
             case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId());
         }
 

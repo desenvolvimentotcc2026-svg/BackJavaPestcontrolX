@@ -22,12 +22,14 @@ public class EmpresaController {
 
     @PostMapping
     public ResponseEntity<Empresa> criar(@RequestBody Empresa empresa) {
-        return ResponseEntity.ok(service.Salvar(empresa));
+        // 🔥 CORRIGIDO DE 'Salvar' PARA 'salvar'
+        return ResponseEntity.ok(service.salvar(empresa));
     }
 
     @GetMapping
     public List<Empresa> listar() {
-        return service.listartodos();
+        // 🔥 CORRIGIDO DE 'listartodos' PARA 'listarTodos'
+        return service.listarTodos();
     }
 
     @GetMapping("/busca")
@@ -62,7 +64,8 @@ public class EmpresaController {
                     if (empresa.getMensagemAutomatica() != null) existente.setMensagemAutomatica(empresa.getMensagemAutomatica());
                     if (empresa.getEndereco() != null) existente.setEndereco(empresa.getEndereco());
 
-                    return ResponseEntity.ok(service.Salvar(existente));
+                    // 🔥 CORRIGIDO DE 'Salvar' PARA 'salvar'
+                    return ResponseEntity.ok(service.salvar(existente));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -75,7 +78,8 @@ public class EmpresaController {
     @GetMapping("/{id}")
     public ResponseEntity<Empresa> buscarPorId(@PathVariable Long id) {
         try {
-            Empresa empresa = service.buscarporid(id);
+            // 🔥 CORRIGIDO DE 'buscarporid' PARA 'buscarPorId'
+            Empresa empresa = service.buscarPorId(id);
             return ResponseEntity.ok(empresa);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();

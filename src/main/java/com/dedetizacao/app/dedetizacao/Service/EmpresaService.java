@@ -1,5 +1,6 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,14 @@ public class EmpresaService {
 
     public List<Empresa> listarTodos() {
         return empresaRepository.findAll();
+    }
+
+    // 🔥 CORREÇÃO: Método adicionado para o registro inicial no AuthController
+    public void salvarFromRegister(RegisterRequest req, Long usuarioId) {
+        Empresa empresa = new Empresa();
+        empresa.setNome(req.getNome());
+        empresa.setEmail(req.getEmail());
+        empresaRepository.save(empresa);
     }
 
     public Empresa salvar(Empresa empresa) {

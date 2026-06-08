@@ -68,4 +68,6 @@ public class FuncionarioService {
         dto.setTelefone(f.getTelefone());
         return dto;
     }
+
+    public void salvar(com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto dto, Long empresaId) {
 }
