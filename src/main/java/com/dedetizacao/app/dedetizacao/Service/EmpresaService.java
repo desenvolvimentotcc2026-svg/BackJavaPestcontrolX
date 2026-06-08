@@ -1,6 +1,5 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
-import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.stereotype.Service;
@@ -11,44 +10,26 @@ import java.util.Optional;
 @Service
 public class EmpresaService {
 
-    private final EmpresaRepository empresaRepository;
+    private final EmpresaRepository repo;
 
-    public EmpresaService(EmpresaRepository empresaRepository) {
-        this.empresaRepository = empresaRepository;
-    }
-
-    public List<Empresa> listarTodos() {
-        return empresaRepository.findAll();
-    }
-
-    // 🔥 CORREÇÃO: Método adicionado para o registro inicial no AuthController
-    public void salvarFromRegister(RegisterRequest req, Long usuarioId) {
-        Empresa empresa = new Empresa();
-        empresa.setNome(req.getNome());
-        empresa.setEmail(req.getEmail());
-        empresaRepository.save(empresa);
+    public EmpresaService(EmpresaRepository repo) {
+        this.repo = repo;
     }
 
     public Empresa salvar(Empresa empresa) {
-        return empresaRepository.save(empresa);
+        return repo.save(empresa);
+    }
+
+    public List<Empresa> listarTodos() {
+        return repo.findAll();
     }
 
     public Empresa buscarPorId(Long id) {
-        return empresaRepository.findById(id)
+        return repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
     }
 
     public void deletar(Long id) {
-        empresaRepository.deleteById(id);
-    }
-
-    public Empresa atualizar(Long id, Empresa empresaAtualizada) {
-        Empresa empresa = buscarPorId(id);
-
-        empresa.setCnpj(empresaAtualizada.getCnpj());
-        empresa.setEmail(empresaAtualizada.getEmail());
-        empresa.setNome(empresaAtualizada.getNome());
-
-        return empresaRepository.save(empresa);
+        repo.deleteById(id);
     }
 }

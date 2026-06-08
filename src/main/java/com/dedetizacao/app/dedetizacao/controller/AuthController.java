@@ -75,22 +75,24 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
 
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email já existe"));
+            return ResponseEntity.badRequest().body("Email já existe");
         }
 
         Usuario user = new Usuario();
         user.setNome(req.getNome());
         user.setEmail(req.getEmail());
         user.setSenha(passwordEncoder.encode(req.getSenha()));
-        user.setTipo(TipoUsuario.valueOf(req.getTipo()));
+        user.setTipo(req.getTipo());
 
         Usuario salvo = usuarioService.salvar(user);
 
         switch (req.getTipo()) {
 
             case "EMPRESA":
-                empresaService.Salvar(new Empresa());
+                Empresa emp = new Empresa();
+                emp.setNome(req.getNome());
+                emp.setEmail(req.getEmail());
+                empresaService.salvar(emp);
                 break;
 
             case "CLIENTE":
@@ -98,11 +100,10 @@ public class AuthController {
                 break;
 
             case "FUNCIONARIO":
-                funcionarioService.criar(req, salvo.getId());
+                funcionarioService.criar(new FuncionarioDto(), salvo.getId());
                 break;
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Cadastro realizado com sucesso"));
+        return ResponseEntity.ok("Cadastro realizado com sucesso");
     }
 }
