@@ -1,35 +1,24 @@
 package com.dedetizacao.app.dedetizacao.Service;
 
+import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Model.Empresa;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class EmpresaService {
 
-    private final EmpresaRepository repo;
+    @Autowired
+    private EmpresaRepository repository;
 
-    public EmpresaService(EmpresaRepository repo) {
-        this.repo = repo;
-    }
+    public Empresa criar(RegisterRequest req, Long usuarioId) {
 
-    public Empresa salvar(Empresa empresa) {
-        return repo.save(empresa);
-    }
+        Empresa e = new Empresa();
+        e.setNome(req.getNome());
+        e.setCnpj(req.getCnpj());
+        e.setUsuarioId(usuarioId);
 
-    public List<Empresa> listarTodos() {
-        return repo.findAll();
-    }
-
-    public Empresa buscarPorId(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
-    }
-
-    public void deletar(Long id) {
-        repo.deleteById(id);
+        return repository.save(e);
     }
 }

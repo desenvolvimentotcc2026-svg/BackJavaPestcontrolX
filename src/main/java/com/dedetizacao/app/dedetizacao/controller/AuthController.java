@@ -2,12 +2,11 @@ package com.dedetizacao.app.dedetizacao.controller;
 
 import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Dto.LoginRequest;
-import com.dedetizacao.app.dedetizacao.Model.Usuario;
-import com.dedetizacao.app.dedetizacao.Model.TipoUsuario;
+import com.dedetizacao.app.dedetizacao.Model.*;
 import com.dedetizacao.app.dedetizacao.Service.*;
 import com.dedetizacao.app.dedetizacao.security.JwtService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -42,17 +41,20 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(request.getEmail());
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
+
+        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
 
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Usuário inválido"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Usuário não encontrado"));
         }
 
         Usuario user = userOpt.get();
 
-        if (!passwordEncoder.matches(request.getSenha(), user.getSenha())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Senha inválida"));
+        if (!passwordEncoder.matches(req.getSenha(), user.getSenha())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Senha inválida"));
         }
 
         String token = jwtService.gerarToken(user.getEmail());
@@ -67,8 +69,10 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email já existe"));
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Email já cadastrado"));
         }
 
         Usuario user = new Usuario();
@@ -79,12 +83,18 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
+        Long empresaId = 1L; // 🔥 FIX TEMPORÁRIO (não quebra build)
+
         switch (user.getTipo()) {
-            case EMPRESA -> empresaService.salvarFromRegister(req, salvo.getId());
-            case CLIENTE -> clienteService.salvarFromRegister(req, salvo.getId());
-            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId());
+
+            case EMPRESA -> empresaService.criar(req, salvo.getId());
+
+            case CLIENTE -> clienteService.criar(req, salvo.getId(), empresaId);
+
+            case FUNCIONARIO -> funcionarioService.criar(req, salvo.getId(), empresaId);
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Cadastro realizado com sucesso"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Cadastro realizado com sucesso"));
     }
 }
