@@ -49,14 +49,21 @@ public class AuthController {
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Usuário não encontrado"));
+                    .body(Map.of("message", "Usuario nao encontrado"));
         }
 
         Usuario user = userOpt.get();
 
         if (!passwordEncoder.matches(req.getSenha(), user.getSenha())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Senha inválida"));
+                    .body(Map.of("message", "Senha invalida"));
+        }
+
+        // 🔒 SEGURANÇA: Se o usuário tem um código de verificação ativo no banco,
+        // significa que ele acabou de se cadastrar e ainda NÃO validou a conta por e-mail.
+        if (user.getCodigoVerificacao() != null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Por favor, verifique sua conta com o codigo enviado ao seu e-mail antes de fazer login."));
         }
 
         String token = jwtService.gerarToken(user.getEmail());
@@ -73,7 +80,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email já cadastrado"));
+                    .body(Map.of("message", "Email ja cadastrado"));
         }
 
         Usuario user = new Usuario();
@@ -101,7 +108,7 @@ public class AuthController {
             ClienteDto dto = new ClienteDto();
             dto.setNome(req.getNome());
             dto.setEmail(req.getEmail());
-            dto.setTelefone("Não informado");
+            dto.setTelefone("Nao informado");
             clienteService.criarFromDto(dto, null);
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
             funcionarioService.criarFromRegister(req, empresaId);
@@ -109,19 +116,45 @@ public class AuthController {
 
         // Envia o e-mail com o token gerado
         try {
-            emailService.enviarCodigo(salvo.getEmail(), "Seu Código de Verificação - PestControlX", "Seu código é: " + token);
+            emailService.enviarCodigo(salvo.getEmail(), "Seu Codigo de Verificacao - PestControlX", "Seu codigo e: " + token);
         } catch (Exception e) {
             System.err.println("Erro ao enviar email: " + e.getMessage());
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of(
-                        "message", "Cadastro realizado com sucesso!",
+                        "message", "Cadastro realizado com sucesso! Verifique seu e-mail.",
                         "token", token
                 ));
     }
 
-    // 🔥 NOVO ENDPOINT: SOLICITAR RECUPERAÇÃO DE SENHA
+    // 🔥 NOVO ENDPOINT: CONFIRMAR O CÓDIGO DO CADASTRO (Ativar a Conta)
+    @PostMapping("/verify-account")
+    public ResponseEntity<?> verifyAccount(@RequestBody Map<String, String> req) {
+        String email = req.get("email");
+        String codigo = req.get("codigo");
+
+        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Usuario nao encontrado"));
+        }
+
+        Usuario user = userOpt.get();
+
+        if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Codigo de verificacao invalido"));
+        }
+
+        // Limpa o código do banco de dados, marcando a conta como VERIFICADA e ATIVA
+        user.setCodigoVerificacao(null);
+        usuarioService.salvar(user);
+
+        return ResponseEntity.ok(Map.of("message", "Conta verificada com sucesso! Agora voce ja pode realizar o login."));
+    }
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> req) {
         String email = req.get("email");
@@ -129,28 +162,25 @@ public class AuthController {
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "E-mail não encontrado em nosso sistema"));
+                    .body(Map.of("message", "E-mail nao encontrado em nosso sistema"));
         }
 
         Usuario user = userOpt.get();
 
-        // Gera um código de 6 dígitos para recuperação
         String codigoRecuperacao = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         user.setCodigoVerificacao(codigoRecuperacao);
         usuarioService.salvar(user);
 
-        // Dispara o e-mail com o código de recuperação
         try {
-            emailService.enviarCodigo(user.getEmail(), "Recuperação de Senha - PestControlX",
-                    "Você solicitou a alteração de senha. Seu código de recuperação é: " + codigoRecuperacao);
+            emailService.enviarCodigo(user.getEmail(), "Recuperacao de Senha - PestControlX",
+                    "Voce solicitou a alteracao de senha. Seu codigo de recuperacao e: " + codigoRecuperacao);
         } catch (Exception e) {
-            System.err.println("Erro ao enviar e-mail de recuperação: " + e.getMessage());
+            System.err.println("Erro ao enviar e-mail de recuperacao: " + e.getMessage());
         }
 
-        return ResponseEntity.ok(Map.of("message", "Código de recuperação enviado para o seu e-mail!"));
+        return ResponseEntity.ok(Map.of("message", "Codigo de recuperacao enviado para o seu e-mail!"));
     }
 
-    // 🔥 NOVO ENDPOINT: DEFINIR A NOVA SENHA COM O CÓDIGO
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> req) {
         String email = req.get("email");
@@ -161,22 +191,20 @@ public class AuthController {
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "Usuário não encontrado"));
+                    .body(Map.of("message", "Usuario nao encontrado"));
         }
 
         Usuario user = userOpt.get();
 
-        // Valida se o código enviado bate com o salvo no banco
         if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Código de verificação inválido ou expirado"));
+                    .body(Map.of("message", "Codigo de verificacao invalido ou expirado"));
         }
 
-        // Criptografa e atualiza a senha, limpando o código em seguida
         user.setSenha(passwordEncoder.encode(novaSenha));
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 
-        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso! Agora você já pode fazer login."));
+        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso! Agora voce ja pode fazer login."));
     }
 }
