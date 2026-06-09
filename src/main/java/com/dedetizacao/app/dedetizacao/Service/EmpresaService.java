@@ -30,19 +30,16 @@ public class EmpresaService {
         repository.deleteById(id);
     }
 
-    // MÉTODO CORRIGIDO: Agora mapeia todos os campos obrigatórios
+    // AGORA ESTÁ PREENCHIDO E FUNCIONANDO
     public Empresa salvarFromRegister(RegisterRequest req, Long usuarioId) {
         Empresa e = new Empresa();
         e.setUsuarioId(usuarioId);
 
-        // Mapeamento dos campos obrigatórios que estavam vindo null
+        // PREENCHENDO OS CAMPOS OBRIGATÓRIOS
         e.setNome(req.getNome());
         e.setEmail(req.getEmail());
-        e.setSenha(req.getSenha());
+        e.setSenha(req.getSenha()); // A senha deve ser a mesma do usuário
         e.setCnpj(req.getCnpj());
-
-        // Caso sua entidade Empresa tenha outros campos obrigatórios,
-        // adicione os setters aqui também.
 
         return repository.save(e);
     }
