@@ -59,8 +59,8 @@ public class AuthController {
                     .body(Map.of("message", "Senha inválida"));
         }
 
-        // Gera o token de 6 dígitos para o login por e-mail
-        String novoTokenLogin = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        // 💡 CORREÇÃO: Gerando um código de 6 dígitos EM NÚMEROS PUROS (Ex: 054321)
+        String novoTokenLogin = String.format("%06d", new Random().nextInt(1000000));
         user.setCodigoVerificacao(novoTokenLogin);
         usuarioService.salvar(user);
 
@@ -77,11 +77,10 @@ public class AuthController {
         ));
     }
 
-    @PostMapping("/verify-login")
-    public ResponseEntity<?> verifyLogin(@RequestBody Map<String, String> req) {
+    // 💡 CORREÇÃO: Endpoint alterado para "/validar" para encaixar perfeitamente com seu token.js e token.html
+    @PostMapping("/validar")
+    public ResponseEntity<?> validarToken(@RequestBody Map<String, String> req) {
         String email = req.get("email");
-
-        // 💡 CORREÇÃO: Aceita tanto "codigo" quanto "code" vindos do Front-end
         String codigo = req.get("codigo") != null ? req.get("codigo") : req.get("code");
 
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
@@ -93,12 +92,10 @@ public class AuthController {
 
         Usuario user = userOpt.get();
 
-        // Tratamento do código enviado (remove espaços e joga pra maiúsculo)
         if (codigo != null) {
-            codigo = codigo.trim().toUpperCase();
+            codigo = codigo.trim();
         }
 
-        // 🪵 LOG DE DETECTIVE NO RENDER (Abra os logs para ver isso acontecer)
         System.out.println("============== DEBUG VERIFY LOGIN ==============");
         System.out.println("👉 Código que está no BANCO: [" + user.getCodigoVerificacao() + "]");
         System.out.println("👉 Código que o FRONT enviou: [" + codigo + "]");
@@ -109,7 +106,7 @@ public class AuthController {
                     .body(Map.of("message", "Código de verificação inválido ou expirado"));
         }
 
-        // Sucesso: Limpa o código e gera o acesso definitivo
+        // Sucesso: limpa o token usado e gera o JWT de sessão
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 
@@ -173,7 +170,8 @@ public class AuthController {
 
         Usuario user = userOpt.get();
 
-        String codigoRecuperacao = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        // Código de recuperação também 100% numérico agora
+        String codigoRecuperacao = String.format("%06d", new Random().nextInt(1000000));
         user.setCodigoVerificacao(codigoRecuperacao);
         usuarioService.salvar(user);
 
@@ -203,13 +201,8 @@ public class AuthController {
         Usuario user = userOpt.get();
 
         if (codigo != null) {
-            codigo = codigo.trim().toUpperCase();
+            codigo = codigo.trim();
         }
-
-        System.out.println("============== DEBUG RESET PASSWORD ==============");
-        System.out.println("👉 Código que está no BANCO: [" + user.getCodigoVerificacao() + "]");
-        System.out.println("👉 Código que o FRONT enviou: [" + codigo + "]");
-        System.out.println("==================================================");
 
         if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
             return ResponseEntity.badRequest()
@@ -220,6 +213,6 @@ public class AuthController {
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 
-        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso! Agora você já pode fazer login."));
+        return ResponseEntity.ok(Map.of("message", "Senha alteredada com sucesso! Agora você já pode fazer login."));
     }
 }
