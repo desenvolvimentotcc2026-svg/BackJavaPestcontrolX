@@ -43,7 +43,6 @@ public class AuthController {
         this.emailService = emailService;
     }
 
-    // ETAPA 1: O usuário digita e-mail e senha. Se estiver correto, gera o código e manda por e-mail.
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
@@ -60,19 +59,17 @@ public class AuthController {
                     .body(Map.of("message", "Senha inválida"));
         }
 
-        // 1. Gera um NOVO código de verificação para este login
+        // Gera o token de 6 dígitos para o login por e-mail
         String novoTokenLogin = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         user.setCodigoVerificacao(novoTokenLogin);
-        usuarioService.salvar(user); // Grava no banco substituindo o antigo
+        usuarioService.salvar(user);
 
-        // 2. Dispara o e-mail com o código gerado na hora
         try {
             emailService.enviarCodigo(user.getEmail(), "Código de Acesso - PestControlX", "Seu código de verificação para entrar é: " + novoTokenLogin);
         } catch (Exception e) {
             System.err.println("Erro ao disparar e-mail de login: " + e.getMessage());
         }
 
-        // 3. Retorna apenas o aviso para o Front-end exibir a tela do código (NÃO manda o JWT ainda!)
         return ResponseEntity.ok(Map.of(
                 "message", "Código de verificação enviado ao seu e-mail.",
                 "requiresVerification", true,
@@ -80,11 +77,12 @@ public class AuthController {
         ));
     }
 
-    // ETAPA 2: O usuário digita o código recebido no e-mail. Se bater, o sistema libera o JWT!
     @PostMapping("/verify-login")
     public ResponseEntity<?> verifyLogin(@RequestBody Map<String, String> req) {
         String email = req.get("email");
-        String codigo = req.get("codigo");
+
+        // 💡 CORREÇÃO: Aceita tanto "codigo" quanto "code" vindos do Front-end
+        String codigo = req.get("codigo") != null ? req.get("codigo") : req.get("code");
 
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
 
@@ -95,20 +93,28 @@ public class AuthController {
 
         Usuario user = userOpt.get();
 
-        // Valida se o código enviado bate com o que acabamos de salvar no login
+        // Tratamento do código enviado (remove espaços e joga pra maiúsculo)
+        if (codigo != null) {
+            codigo = codigo.trim().toUpperCase();
+        }
+
+        // 🪵 LOG DE DETECTIVE NO RENDER (Abra os logs para ver isso acontecer)
+        System.out.println("============== DEBUG VERIFY LOGIN ==============");
+        System.out.println("👉 Código que está no BANCO: [" + user.getCodigoVerificacao() + "]");
+        System.out.println("👉 Código que o FRONT enviou: [" + codigo + "]");
+        System.out.println("================================================");
+
         if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Código de verificação inválido ou expirado"));
         }
 
-        // Limpa o código do banco pois ele já usou para entrar
+        // Sucesso: Limpa o código e gera o acesso definitivo
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 
-        // Gera o Token JWT de acesso definitivo
         String tokenJwt = jwtService.gerarToken(user.getEmail());
 
-        // Retorna os dados completos do login de sucesso
         return ResponseEntity.ok(Map.of(
                 "token", tokenJwt,
                 "tipo", user.getTipo().name(),
@@ -152,7 +158,7 @@ public class AuthController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("message", "Cadastro realizado com sucesso! Agora você já pode fazer login para receber seu primeiro código."));
+                .body(Map.of("message", "Cadastro realizado com sucesso! Faça login para receber o código."));
     }
 
     @PostMapping("/forgot-password")
@@ -184,8 +190,8 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> req) {
         String email = req.get("email");
-        String codigo = req.get("codigo");
-        String novaSenha = req.get("novaSenha");
+        String codigo = req.get("codigo") != null ? req.get("codigo") : req.get("code");
+        String novaSenha = req.get("novaSenha") != null ? req.get("novaSenha") : req.get("password");
 
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
 
@@ -195,6 +201,15 @@ public class AuthController {
         }
 
         Usuario user = userOpt.get();
+
+        if (codigo != null) {
+            codigo = codigo.trim().toUpperCase();
+        }
+
+        System.out.println("============== DEBUG RESET PASSWORD ==============");
+        System.out.println("👉 Código que está no BANCO: [" + user.getCodigoVerificacao() + "]");
+        System.out.println("👉 Código que o FRONT enviou: [" + codigo + "]");
+        System.out.println("==================================================");
 
         if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
             return ResponseEntity.badRequest()
