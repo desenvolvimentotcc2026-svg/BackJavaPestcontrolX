@@ -44,7 +44,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
 
         if (userOpt.isEmpty()) {
@@ -71,7 +70,6 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
-
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Email já cadastrado"));
@@ -85,16 +83,16 @@ public class AuthController {
 
         Usuario salvo = usuarioService.salvar(user);
 
-        // Convertendo de forma segura o CNPJ em Long para usar como EmpresaId no Funcionario
+        // Conversão segura do CNPJ/ID para funcionário
         Long empresaId = 0L;
         if (req.getCnpj() != null && !req.getCnpj().isEmpty()) {
             try {
-                empresaId = Long.valueOf(req.getCnpj());
+                empresaId = Long.valueOf(req.getCnpj().replaceAll("[^0-9]", ""));
             } catch (NumberFormatException ignored) {}
         }
 
         if (user.getTipo() == TipoUsuario.EMPRESA) {
-            // Se for empresa, cria uma empresa básica e amarra ao ID
+            // Agora o método abaixo preenche corretamente o e-mail, nome e CNPJ
             empresaService.salvarFromRegister(req, salvo.getId());
 
         } else if (user.getTipo() == TipoUsuario.CLIENTE) {
@@ -102,7 +100,6 @@ public class AuthController {
             dto.setNome(req.getNome());
             dto.setEmail(req.getEmail());
             dto.setTelefone("Não informado");
-            // O cliente se vincula à empresa depois no app
             clienteService.criarFromDto(dto, null);
 
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
