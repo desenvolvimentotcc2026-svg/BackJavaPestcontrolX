@@ -43,33 +43,74 @@ public class AuthController {
         this.emailService = emailService;
     }
 
+    // ETAPA 1: O usuário digita e-mail e senha. Se estiver correto, gera o código e manda por e-mail.
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Usuario nao encontrado"));
+                    .body(Map.of("message", "Usuário não encontrado"));
         }
 
         Usuario user = userOpt.get();
 
         if (!passwordEncoder.matches(req.getSenha(), user.getSenha())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Senha invalida"));
+                    .body(Map.of("message", "Senha inválida"));
         }
 
-        // 🔒 SEGURANÇA: Se o usuário tem um código de verificação ativo no banco,
-        // significa que ele acabou de se cadastrar e ainda NÃO validou a conta por e-mail.
-        if (user.getCodigoVerificacao() != null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("message", "Por favor, verifique sua conta com o codigo enviado ao seu e-mail antes de fazer login."));
+        // 1. Gera um NOVO código de verificação para este login
+        String novoTokenLogin = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        user.setCodigoVerificacao(novoTokenLogin);
+        usuarioService.salvar(user); // Grava no banco substituindo o antigo
+
+        // 2. Dispara o e-mail com o código gerado na hora
+        try {
+            emailService.enviarCodigo(user.getEmail(), "Código de Acesso - PestControlX", "Seu código de verificação para entrar é: " + novoTokenLogin);
+        } catch (Exception e) {
+            System.err.println("Erro ao disparar e-mail de login: " + e.getMessage());
         }
 
-        String token = jwtService.gerarToken(user.getEmail());
-
+        // 3. Retorna apenas o aviso para o Front-end exibir a tela do código (NÃO manda o JWT ainda!)
         return ResponseEntity.ok(Map.of(
-                "token", token,
+                "message", "Código de verificação enviado ao seu e-mail.",
+                "requiresVerification", true,
+                "email", user.getEmail()
+        ));
+    }
+
+    // ETAPA 2: O usuário digita o código recebido no e-mail. Se bater, o sistema libera o JWT!
+    @PostMapping("/verify-login")
+    public ResponseEntity<?> verifyLogin(@RequestBody Map<String, String> req) {
+        String email = req.get("email");
+        String codigo = req.get("codigo");
+
+        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Usuário não encontrado"));
+        }
+
+        Usuario user = userOpt.get();
+
+        // Valida se o código enviado bate com o que acabamos de salvar no login
+        if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Código de verificação inválido ou expirado"));
+        }
+
+        // Limpa o código do banco pois ele já usou para entrar
+        user.setCodigoVerificacao(null);
+        usuarioService.salvar(user);
+
+        // Gera o Token JWT de acesso definitivo
+        String tokenJwt = jwtService.gerarToken(user.getEmail());
+
+        // Retorna os dados completos do login de sucesso
+        return ResponseEntity.ok(Map.of(
+                "token", tokenJwt,
                 "tipo", user.getTipo().name(),
                 "id", user.getId(),
                 "nome", user.getNome()
@@ -80,7 +121,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         if (usuarioService.buscarPorEmail(req.getEmail()).isPresent()) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Email ja cadastrado"));
+                    .body(Map.of("message", "Email já cadastrado"));
         }
 
         Usuario user = new Usuario();
@@ -88,10 +129,6 @@ public class AuthController {
         user.setEmail(req.getEmail());
         user.setSenha(passwordEncoder.encode(req.getSenha()));
         user.setTipo(TipoUsuario.valueOf(req.getTipo()));
-
-        // Gera e define o token de verificação inicial
-        String token = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        user.setCodigoVerificacao(token);
 
         Usuario salvo = usuarioService.salvar(user);
 
@@ -108,51 +145,14 @@ public class AuthController {
             ClienteDto dto = new ClienteDto();
             dto.setNome(req.getNome());
             dto.setEmail(req.getEmail());
-            dto.setTelefone("Nao informado");
+            dto.setTelefone("Não informado");
             clienteService.criarFromDto(dto, null);
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
             funcionarioService.criarFromRegister(req, empresaId);
         }
 
-        // Envia o e-mail com o token gerado
-        try {
-            emailService.enviarCodigo(salvo.getEmail(), "Seu Codigo de Verificacao - PestControlX", "Seu codigo e: " + token);
-        } catch (Exception e) {
-            System.err.println("Erro ao enviar email: " + e.getMessage());
-        }
-
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "message", "Cadastro realizado com sucesso! Verifique seu e-mail.",
-                        "token", token
-                ));
-    }
-
-    // 🔥 NOVO ENDPOINT: CONFIRMAR O CÓDIGO DO CADASTRO (Ativar a Conta)
-    @PostMapping("/verify-account")
-    public ResponseEntity<?> verifyAccount(@RequestBody Map<String, String> req) {
-        String email = req.get("email");
-        String codigo = req.get("codigo");
-
-        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(email);
-
-        if (userOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "Usuario nao encontrado"));
-        }
-
-        Usuario user = userOpt.get();
-
-        if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Codigo de verificacao invalido"));
-        }
-
-        // Limpa o código do banco de dados, marcando a conta como VERIFICADA e ATIVA
-        user.setCodigoVerificacao(null);
-        usuarioService.salvar(user);
-
-        return ResponseEntity.ok(Map.of("message", "Conta verificada com sucesso! Agora voce ja pode realizar o login."));
+                .body(Map.of("message", "Cadastro realizado com sucesso! Agora você já pode fazer login para receber seu primeiro código."));
     }
 
     @PostMapping("/forgot-password")
@@ -162,7 +162,7 @@ public class AuthController {
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "E-mail nao encontrado em nosso sistema"));
+                    .body(Map.of("message", "E-mail não encontrado em nosso sistema"));
         }
 
         Usuario user = userOpt.get();
@@ -172,13 +172,13 @@ public class AuthController {
         usuarioService.salvar(user);
 
         try {
-            emailService.enviarCodigo(user.getEmail(), "Recuperacao de Senha - PestControlX",
-                    "Voce solicitou a alteracao de senha. Seu codigo de recuperacao e: " + codigoRecuperacao);
+            emailService.enviarCodigo(user.getEmail(), "Recuperação de Senha - PestControlX",
+                    "Você solicitou a alteração de senha. Seu código de recuperação é: " + codigoRecuperacao);
         } catch (Exception e) {
-            System.err.println("Erro ao enviar e-mail de recuperacao: " + e.getMessage());
+            System.err.println("Erro ao enviar e-mail de recuperação: " + e.getMessage());
         }
 
-        return ResponseEntity.ok(Map.of("message", "Codigo de recuperacao enviado para o seu e-mail!"));
+        return ResponseEntity.ok(Map.of("message", "Código de recuperação enviado para o seu e-mail!"));
     }
 
     @PostMapping("/reset-password")
@@ -191,20 +191,20 @@ public class AuthController {
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("message", "Usuario nao encontrado"));
+                    .body(Map.of("message", "Usuário não encontrado"));
         }
 
         Usuario user = userOpt.get();
 
         if (user.getCodigoVerificacao() == null || !user.getCodigoVerificacao().equals(codigo)) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Codigo de verificacao invalido ou expirado"));
+                    .body(Map.of("message", "Código de verificação inválido ou expirado"));
         }
 
         user.setSenha(passwordEncoder.encode(novaSenha));
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 
-        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso! Agora voce ja pode fazer login."));
+        return ResponseEntity.ok(Map.of("message", "Senha alterada com sucesso! Agora você já pode fazer login."));
     }
 }
