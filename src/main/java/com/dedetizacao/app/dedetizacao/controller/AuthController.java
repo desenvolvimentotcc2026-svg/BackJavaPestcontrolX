@@ -84,7 +84,11 @@ public class AuthController {
         user.setSenha(passwordEncoder.encode(req.getSenha()));
         user.setTipo(TipoUsuario.valueOf(req.getTipo()));
 
+        String token = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+        user.setCodigoVerificacao(token)
+
         Usuario salvo = usuarioService.salvar(user);
+
 
         // Conversão segura do CNPJ/ID para funcionário
         Long empresaId = 0L;
@@ -107,11 +111,11 @@ public class AuthController {
             funcionarioService.criarFromRegister(req, empresaId);
         }
 
-        // --- AQUI ENTRA A LÓGICA DO TOKEN (SÓ NO REGISTER) ---
-        String token = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-
-        // Dispara o email e loga no console do Render para você ver
-        emailService.enviarCodigo(req.getEmail(), "Código de Verificação - PestControlX", "Seu código é: " + token);
+        try {
+            emailService.enviarCodigo(salvo.getEmail(), "Seu Código de Verificação", "Seu código é: " + token);
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar email: " + e.getMessage());
+        }
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(Map.of(
