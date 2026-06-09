@@ -85,7 +85,7 @@ public class AuthController {
         user.setTipo(TipoUsuario.valueOf(req.getTipo()));
 
         String token = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-        user.setCodigoVerificacao(token)
+        user.setCodigoVerificacao(token);
 
         Usuario salvo = usuarioService.salvar(user);
 
