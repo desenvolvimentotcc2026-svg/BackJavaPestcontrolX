@@ -215,24 +215,28 @@ public class AuthController {
     }
 
     @PostMapping("/validar-empresa")
-    public ResponseEntity<?> validarEmpresa(@RequestBody ValidarEmpresaRequest request){
-        String cnpjlimpo = request.getCnpj().replaceAll("[^0-9]", "");
-        String chaveEnviada = request.getChaveCorporativa.replaceAll().trim();
+    public ResponseEntity<?> validarEmpresa(@RequestBody ValidarEmpresaRequest request) {
 
-        Optional<Empresa> empresaOpt = empresaService.buscarPorCnpj(cnpjlimpo);
+        // 1. Limpeza preventiva de strings contra injection ou falhas de digitação
+        String cnpjLimpo = request.getCnpj().replaceAll("[^0-9]", "");
+        String chaveEnviada = request.getChaveCorporativa().trim();
+
+        Optional<Empresa> empresaOpt = empresaService.buscarPorCnpj(cnpjLimpo);
 
         if (empresaOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNATHORIZED).body(Map.of("message", "Empresa não ncontrada com o Cnpj Informado!"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Empresa não encontrada com o CNPJ informado."));
         }
-            Empresa empresa = empresaOpt.get();
 
-            String chaveBancoClean = empresa.getChaveCorporativa().trim();
+        Empresa empresa = empresaOpt.get();
 
-            if (chaveBancoClean.equals(chaveEnviada)){
-                return ResponseEntity<?>.status(HttpStatus.UNATHORIZED).body(Map.of("message", "Chave Corporativa invalida para esta Empresa!"));
+        String chaveBancoClean = empresa.getChaveCorporativa().trim();
 
-            }
+        if (!chaveBancoClean.equals(chaveEnviada)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Chave corporativa inválida para esta empresa."));
+        }
 
-            ResponseEntity.ok().build();
+        return ResponseEntity.ok().build();
     }
 }
