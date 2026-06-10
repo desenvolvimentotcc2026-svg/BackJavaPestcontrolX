@@ -6,6 +6,7 @@ import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmpresaService {
@@ -30,17 +31,20 @@ public class EmpresaService {
         repository.deleteById(id);
     }
 
-    // AGORA ESTÁ PREENCHIDO E FUNCIONANDO
     public Empresa salvarFromRegister(RegisterRequest req, Long usuarioId) {
         Empresa e = new Empresa();
         e.setUsuarioId(usuarioId);
 
-        // PREENCHENDO OS CAMPOS OBRIGATÓRIOS
+        // Preenchendo os campos obrigatórios
         e.setNome(req.getNome());
         e.setEmail(req.getEmail());
-        e.setSenha(req.getSenha()); // A senha deve ser a mesma do usuário
+        e.setSenha(req.getSenha());
         e.setCnpj(req.getCnpj());
 
         return repository.save(e);
+    }
+
+    public Optional<Empresa> buscarPorCnpj(String cnpj) {
+        return repository.findByCnpj(cnpj);
     }
 }
