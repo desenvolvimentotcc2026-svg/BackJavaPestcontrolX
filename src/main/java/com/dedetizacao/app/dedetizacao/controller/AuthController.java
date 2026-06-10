@@ -59,7 +59,6 @@ public class AuthController {
                     .body(Map.of("message", "Senha inválida"));
         }
 
-        // 💡 CORREÇÃO: Gerando um código de 6 dígitos EM NÚMEROS PUROS (Ex: 054321)
         String novoTokenLogin = String.format("%06d", new Random().nextInt(1000000));
         user.setCodigoVerificacao(novoTokenLogin);
         usuarioService.salvar(user);
@@ -77,7 +76,6 @@ public class AuthController {
         ));
     }
 
-    // 💡 CORREÇÃO: Endpoint alterado para "/validar" para encaixar perfeitamente com seu token.js e token.html
     @PostMapping("/validar")
     public ResponseEntity<?> validarToken(@RequestBody Map<String, String> req) {
         String email = req.get("email");
@@ -214,5 +212,27 @@ public class AuthController {
         usuarioService.salvar(user);
 
         return ResponseEntity.ok(Map.of("message", "Senha alteredada com sucesso! Agora você já pode fazer login."));
+    }
+
+    @PostMapping("/validar-empresa")
+    public ResponseEntity<?> validarEmpresa(@RequestBody ValidarEmpresaRequest request){
+        String cnpjlimpo = request.getCnpj().replaceAll("[^0-9]", "");
+        String chaveEnviada = request.getChaveCorporativa.replaceAll().trim();
+
+        Optional<Empresa> empresaOpt = empresaService.buscarPorCnpj(cnpjlimpo);
+
+        if (empresaOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNATHORIZED).body(Map.of("message", "Empresa não ncontrada com o Cnpj Informado!"));
+        }
+            Empresa empresa = empresaOpt.get();
+
+            String chaveBancoClean = empresa.getChaveCorporativa().trim();
+
+            if (chaveBancoClean.equals(chaveEnviada)){
+                return ResponseEntity<?>.status(HttpStatus.UNATHORIZED).body(Map.of("message", "Chave Corporativa invalida para esta Empresa!"));
+
+            }
+
+            ResponseEntity.ok().build();
     }
 }
