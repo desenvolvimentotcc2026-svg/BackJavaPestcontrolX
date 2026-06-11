@@ -2,6 +2,7 @@ package com.dedetizacao.app.dedetizacao.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -35,27 +36,28 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 🔥 A CHAVE PARA RESOLVER O ERRO 401: Liberar a requisição OPTIONS do navegador
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/ws-pestcontrol/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/empresas/**").permitAll()
+                        .requestMatchers("/agendamentos/**").permitAll()
+
+                        .anyRequest().authenticated()
+                )
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> {
-                            System.out.println("❌ [BLOQUEIO SECURITY] Rota recusada: " + request.getRequestURI());
+                            System.out.println("❌ [BLOQUEIO SECURITY] Rota recusada (401): " + request.getRequestURI());
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"erro\": \"Não autorizado. Token ausente ou inválido.\"}");
                         })
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/ws-pestcontrol/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-
-                        .requestMatchers("/api/empresas/**").permitAll()
-                        .requestMatchers("/agendamentos/**").permitAll()
-
-                        .anyRequest().authenticated()
-
-                ) // A quebra estava provavelmente aqui!
                 .addFilterBefore(jwtFiltro, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -66,7 +68,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(List.of("*"));
+        // Reforçando para aceitar explicitamente o Authorization
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         config.setAllowCredentials(true);
         config.setExposedHeaders(List.of("Authorization"));
 
