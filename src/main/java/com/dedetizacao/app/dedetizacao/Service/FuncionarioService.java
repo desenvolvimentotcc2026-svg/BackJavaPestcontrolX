@@ -6,14 +6,15 @@ import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Dto.RegisterRequest;
 import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class FuncionarioService {
 
-    // 🔥 CORREÇÃO 1: Unificamos o nome para "repo" e usamos o construtor corretamente
     private final FuncionarioRepository repo;
     private final EmpresaRepository empresaRepo;
 
@@ -22,14 +23,10 @@ public class FuncionarioService {
         this.empresaRepo = empresaRepo;
     }
 
-    // 🔥 CORREÇÃO 2: A ordem dos parâmetros ajustada para casar com o AuthController
     public Funcionario criar(RegisterRequest req, Long usuarioId) {
         Funcionario f = new Funcionario();
-        // Verifique se a sua Model Funcionario usa setUsuarioId ou setEmpresa.
-        // Baseado no seu código, mantive o que você escreveu.
         f.setNome(req.getNome());
         f.setEmail(req.getEmail());
-
         return repo.save(f);
     }
 
@@ -39,7 +36,8 @@ public class FuncionarioService {
 
     public Funcionario buscarPorId(Long id) {
         return repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado"));
+                // 🔥 CORREÇÃO: Evita HTTP 500 retornando um 404 limpo
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
     }
 
     public Funcionario atualizar(Long id, Funcionario f) {
@@ -71,9 +69,9 @@ public class FuncionarioService {
     }
 
     public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
-
         Empresa empresa = empresaRepo.findById(empresaId)
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+                // 🔥 CORREÇÃO: Evita HTTP 500 se o ID da empresa não existir
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa não encontrada"));
 
         Funcionario f = new Funcionario();
         f.setNome(dto.getNome());
@@ -89,9 +87,6 @@ public class FuncionarioService {
         Funcionario f = new Funcionario();
         f.setNome(req.getNome());
         f.setEmail(req.getEmail());
-        // Caso a sua Model Funcionario não tenha "setEmpresaId", você precisará buscar
-        // a Empresa via empresaRepo.findById(empresaId) e usar f.setEmpresa(empresa);
-
         return repo.save(f);
     }
 }

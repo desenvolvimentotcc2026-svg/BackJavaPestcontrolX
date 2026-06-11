@@ -219,9 +219,16 @@ public class AuthController {
     @PostMapping("/validar-empresa")
     public ResponseEntity<?> validarEmpresa(@RequestBody ValidarEmpresaRequest request) {
 
-        // 1. Limpeza preventiva de strings contra injection ou falhas de digitação
-        String cnpjLimpo = request.getCnpj().replaceAll("[^0-9]", "");
-        String chaveEnviada = request.getChaveCorporativa().trim();
+        // 1. Limpeza preventiva e proteção contra null vindo do front
+        String cnpjInput = request.getCnpj() != null ? request.getCnpj() : "";
+        String chaveEnviada = request.getChaveCorporativa() != null ? request.getChaveCorporativa().trim() : "";
+
+        String cnpjLimpo = cnpjInput.replaceAll("[^0-9]", "");
+
+        if (cnpjLimpo.isEmpty() || chaveEnviada.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", "CNPJ e Chave corporativa são obrigatórios."));
+        }
 
         Optional<Empresa> empresaOpt = empresaService.buscarPorCnpj(cnpjLimpo);
 
@@ -231,6 +238,12 @@ public class AuthController {
         }
 
         Empresa empresa = empresaOpt.get();
+        
+        // Se a empresa no banco estiver com a chave nula, barramos com erro 401 limpo.
+        if (empresa.getChaveCorporativa() == null || empresa.getChaveCorporativa().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Esta empresa ainda não possui uma chave corporativa configurada no sistema."));
+        }
 
         String chaveBancoClean = empresa.getChaveCorporativa().trim();
 
@@ -239,6 +252,7 @@ public class AuthController {
                     .body(Map.of("message", "Chave corporativa inválida para esta empresa."));
         }
 
+        // Sucesso total! Retorna 200 OK para o Android seguir para a MainActivity
         return ResponseEntity.ok().build();
     }
 }
