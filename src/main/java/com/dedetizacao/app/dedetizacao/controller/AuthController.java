@@ -238,7 +238,7 @@ public class AuthController {
         }
 
         Empresa empresa = empresaOpt.get();
-        
+
         // Se a empresa no banco estiver com a chave nula, barramos com erro 401 limpo.
         if (empresa.getChaveCorporativa() == null || empresa.getChaveCorporativa().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
