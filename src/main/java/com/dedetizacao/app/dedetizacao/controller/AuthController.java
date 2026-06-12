@@ -151,7 +151,7 @@ public class AuthController {
             dto.setTelefone("Não informado");
             clienteService.criarFromDto(dto, null);
         } else if (user.getTipo() == TipoUsuario.FUNCIONARIO) {
-            funcionarioService.criarFromRegister(req, empresaId);
+            funcionarioService.criar(req, empresaId);
         }
 
         return ResponseEntity.status(HttpStatus.CREATED)
