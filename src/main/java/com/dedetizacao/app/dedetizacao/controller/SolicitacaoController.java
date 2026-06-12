@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/solicitacoes") // Centraliza de forma exclusiva o endpoint do App Móvel
+@RequestMapping("/api/solicitacoes")
 @CrossOrigin(origins = "*")
 public class SolicitacaoController {
 

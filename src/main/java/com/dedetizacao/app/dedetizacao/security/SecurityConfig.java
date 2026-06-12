@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/ping").permitAll()
                         .requestMatchers("/ws-pestcontrol/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
