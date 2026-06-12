@@ -36,21 +36,34 @@ public class FuncionarioService {
 
     public Funcionario buscarPorId(Long id) {
         return repo.findById(id)
-                // 🔥 CORREÇÃO: Evita HTTP 500 retornando um 404 limpo
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
     }
 
-    public Funcionario atualizar(Long id, Funcionario f) {
+    public Funcionario atualizar(Long id, FuncionarioDto dto) {
         Funcionario func = buscarPorId(id);
-        func.setNome(f.getNome());
-        func.setEmail(f.getEmail());
-        func.setTelefone(f.getTelefone());
-        func.setStatus(f.getStatus());
+        func.setNome(dto.getNome());
+        func.setEmail(dto.getEmail());
+        func.setTelefone(dto.getTelefone());
+        func.setCargo(dto.getCargo());
+        func.setCpf(dto.getCpf());
+        if (dto.getAtivo() != null) {
+            func.setAtivo(dto.getAtivo());
+        }
+
+        if (dto.getEmpresa_id() != null) {
+            Empresa em = empresaRepo.findById(dto.getEmpresa_id())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa de destino não encontrada"));
+            func.setEmpresa(em);
+        }
         return repo.save(func);
     }
 
     public void atualizarStatus(Long id, String status) {
         Funcionario f = buscarPorId(id);
+        // Limpa as aspas inseridas pelo formato de requisições JSON brutas
+        if (status != null) {
+            status = status.replace("\"", "").trim();
+        }
         f.setStatus(status);
         repo.save(f);
     }
@@ -65,28 +78,35 @@ public class FuncionarioService {
         dto.setNome(f.getNome());
         dto.setEmail(f.getEmail());
         dto.setTelefone(f.getTelefone());
+        dto.setCargo(f.getCargo());
+        dto.setCpf(f.getCpf());
+        dto.setAtivo(f.getAtivo());
+        if (f.getEmpresa() != null) {
+            dto.setEmpresa_id(f.getEmpresa().getId());
+        }
         return dto;
     }
 
     public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
-        Empresa empresa = empresaRepo.findById(empresaId)
-                // 🔥 CORREÇÃO: Evita HTTP 500 se o ID da empresa não existir
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa não encontrada"));
+        // Fallback inteligente: aceita o ID da URL ou do corpo da requisição
+        Long idEmpresaFinal = (empresaId != null) ? empresaId : dto.getEmpresa_id();
+        if (idEmpresaFinal == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ID da empresa vinculada é obrigatório.");
+        }
+
+        Empresa empresa = empresaRepo.findById(idEmpresaFinal)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa informada não existe"));
 
         Funcionario f = new Funcionario();
         f.setNome(dto.getNome());
         f.setEmail(dto.getEmail());
         f.setTelefone(dto.getTelefone());
+        f.setCargo(dto.getCargo());
+        f.setCpf(dto.getCpf()); // Correção do estouro de Not-Null no banco
+        f.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
         f.setStatus("OFFLINE");
         f.setEmpresa(empresa);
 
-        return repo.save(f);
-    }
-
-    public Funcionario criarFromRegister(RegisterRequest req, Long empresaId) {
-        Funcionario f = new Funcionario();
-        f.setNome(req.getNome());
-        f.setEmail(req.getEmail());
         return repo.save(f);
     }
 }

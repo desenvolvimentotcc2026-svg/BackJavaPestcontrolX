@@ -14,9 +14,7 @@ public class FuncionarioDto {
     public FuncionarioDto() {
     }
 
-    public FuncionarioDto(Long id, String nome, String email, String telefone, String cargo, Long empresa_id, Boolean ativo, String cpf)
-
-    {
+    public FuncionarioDto(Long id, String nome, String email, String telefone, String cargo, Long empresa_id, Boolean ativo, String cpf) {
         this.id = id;
         this.nome = nome;
         this.email = email;
@@ -27,67 +25,27 @@ public class FuncionarioDto {
         this.cpf = cpf;
     }
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public String getNome() {
-        return nome;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getCargo() { return cargo; }
+    public void setCargo(String cargo) { this.cargo = cargo; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public Long getEmpresa_id() { return empresa_id; }
+    public void setEmpresa_id(Long id) { this.empresa_id = id; }
 
-    public String getTelefone() {
-        return telefone;
-    }
+    public Boolean getAtivo() { return ativo; }
+    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
 
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public String getCargo() {
-        return cargo;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public Long getEmpresa_id(){
-        return empresa_id;
-    }
-
-    public void setEmpresa_id(Long id){
-        this.empresa_id = id;
-    }
-
-    public Boolean getAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(Boolean ativo) {
-        this.ativo = ativo;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
+    public String getCpf() { return cpf; }
+    public void setCpf(String cpf) { this.cpf = cpf; }
 }
