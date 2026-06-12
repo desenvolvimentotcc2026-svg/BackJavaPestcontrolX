@@ -33,7 +33,7 @@ public class JwtFiltro extends OncePerRequestFilter {
             return;
         }
 
-        if (path.contains("/auth") || path.contains("/swagger-ui") || path.contains("/v3/api-docs") || path.contains("/ws-pestcontrol") || path.contains("/ws-pestcontrol-sockjs")) {
+        if (path.contains("/ping") || path.contains("/auth") || path.contains("/swagger-ui") || path.contains("/v3/api-docs") || path.contains("/ws-pestcontrol") || path.contains("/ws-pestcontrol-sockjs")) {
             filterChain.doFilter(request, response);
             return;
         }
