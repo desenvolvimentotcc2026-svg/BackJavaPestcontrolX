@@ -4,6 +4,7 @@ import com.dedetizacao.app.dedetizacao.Dto.FuncionarioDto;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import com.dedetizacao.app.dedetizacao.Repository.FuncionarioRepository;
 import com.dedetizacao.app.dedetizacao.Service.FuncionarioService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
