@@ -47,11 +47,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
-        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
-
-        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro: A senha não pode estar vazia ou nula."));
+        // 1. Validação defensiva corrigida (Evita o crash de rawPassword nulo usando os padrões do seu DTO)
+        if (req.getSenha() == null || req.getSenha().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Erro: A senha não pode estar vazia ou nula."));
         }
+
+        Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
 
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -174,7 +176,6 @@ public class AuthController {
 
         Usuario user = userOpt.get();
 
-        // Código de recuperação também 100% numérico agora
         String codigoRecuperacao = String.format("%06d", new Random().nextInt(1000000));
         user.setCodigoVerificacao(codigoRecuperacao);
         usuarioService.salvar(user);
@@ -223,7 +224,6 @@ public class AuthController {
     @PostMapping("/validar-empresa")
     public ResponseEntity<?> validarEmpresa(@RequestBody ValidarEmpresaRequest request) {
 
-        // 1. Limpeza preventiva e proteção contra null vindo do front
         String cnpjInput = request.getCnpj() != null ? request.getCnpj() : "";
         String chaveEnviada = request.getChaveCorporativa() != null ? request.getChaveCorporativa().trim() : "";
 
@@ -243,7 +243,6 @@ public class AuthController {
 
         Empresa empresa = empresaOpt.get();
 
-        // Se a empresa no banco estiver com a chave nula, barramos com erro 401 limpo.
         if (empresa.getChaveCorporativa() == null || empresa.getChaveCorporativa().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Esta empresa ainda não possui uma chave corporativa configurada no sistema."));
@@ -256,7 +255,6 @@ public class AuthController {
                     .body(Map.of("message", "Chave corporativa inválida para esta empresa."));
         }
 
-        // Sucesso total! Retorna 200 OK para o Android seguir para a MainActivity
         return ResponseEntity.ok().build();
     }
 }
