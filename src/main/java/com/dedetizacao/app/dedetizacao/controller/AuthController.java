@@ -49,6 +49,10 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         Optional<Usuario> userOpt = usuarioService.buscarPorEmail(req.getEmail());
 
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("Erro: A senha não pode estar vazia ou nula."));
+        }
+
         if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Usuário não encontrado"));
