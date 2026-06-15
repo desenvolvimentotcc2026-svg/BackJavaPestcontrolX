@@ -74,7 +74,7 @@ public class Empresa {
     public String getChaveCorporativa() { return chaveCorporativa; }
     public void setChaveCorporativa(String chaveCorporativa) { this.chaveCorporativa = chaveCorporativa; }
     public String getContatoPlantao() { return contatoPlantao; }
-    public void setContatoPlantao(String contatoPlantao) { this.ContatoPlantao = contatoPlantao; }
+    public void setContatoPlantao(String contatoPlantao) { this.contatoPlantao = contatoPlantao; }
     public String getJanelaAtendimento() { return janelaAtendimento; }
     public void setJanelaAtendimento(String janelaAtendimento) { this.janelaAtendimento = janelaAtendimento; }
     public String getLicencaSanitaria() { return licencaSanitaria; }
