@@ -7,12 +7,11 @@ public class FuncionarioDto {
     private String email;
     private String telefone;
     private String cargo;
-    private Long empresa_id;
-    private Boolean ativo;
     private String cpf;
+    private Boolean ativo;
+    private Long empresa_id;
 
-    public FuncionarioDto() {
-    }
+    public FuncionarioDto() {}
 
     public FuncionarioDto(Long id, String nome, String email, String telefone, String cargo, Long empresa_id, Boolean ativo, String cpf) {
         this.id = id;
@@ -40,12 +39,12 @@ public class FuncionarioDto {
     public String getCargo() { return cargo; }
     public void setCargo(String cargo) { this.cargo = cargo; }
 
-    public Long getEmpresa_id() { return empresa_id; }
-    public void setEmpresa_id(Long id) { this.empresa_id = id; }
+    public String getCpf() { return cpf; }
+    public void setCpf(String cpf) { this.cpf = cpf; }
 
     public Boolean getAtivo() { return ativo; }
     public void setAtivo(Boolean ativo) { this.ativo = ativo; }
 
-    public String getCpf() { return cpf; }
-    public void setCpf(String cpf) { this.cpf = cpf; }
+    public Long getEmpresa_id() { return empresa_id; }
+    public void setEmpresa_id(Long empresa_id) { this.empresa_id = empresa_id; }
 }

@@ -1,10 +1,8 @@
 package com.dedetizacao.app.dedetizacao.Repository;
 
-import com.dedetizacao.app.dedetizacao.Model.Cliente;
 import com.dedetizacao.app.dedetizacao.Model.Funcionario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
-
 import java.util.Optional;
 
 public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> {
@@ -13,5 +11,5 @@ public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> 
 
     List<Funcionario> findByStatus(String status);
 
-    List<Funcionario> findByEmpresaId(Long EmpresaId);
+    List<Funcionario> findByEmpresaId(Long empresaId);
 }

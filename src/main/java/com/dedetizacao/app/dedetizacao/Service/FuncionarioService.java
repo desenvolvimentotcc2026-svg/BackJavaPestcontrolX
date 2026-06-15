@@ -27,6 +27,10 @@ public class FuncionarioService {
         Funcionario f = new Funcionario();
         f.setNome(req.getNome());
         f.setEmail(req.getEmail());
+        f.setCpf(req.getCnpj()); // Vincula o documento enviado pelo app mobile para evitar erro de banco NotNull
+        f.setUsuarioId(usuarioId);
+        f.setAtivo(true);
+        f.setStatus("OFFLINE");
         return repo.save(f);
     }
 
@@ -46,13 +50,14 @@ public class FuncionarioService {
         func.setTelefone(dto.getTelefone());
         func.setCargo(dto.getCargo());
         func.setCpf(dto.getCpf());
+
         if (dto.getAtivo() != null) {
             func.setAtivo(dto.getAtivo());
         }
 
         if (dto.getEmpresa_id() != null) {
             Empresa em = empresaRepo.findById(dto.getEmpresa_id())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa de destino não encontrada"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa não encontrada"));
             func.setEmpresa(em);
         }
         return repo.save(func);
@@ -60,7 +65,6 @@ public class FuncionarioService {
 
     public void atualizarStatus(Long id, String status) {
         Funcionario f = buscarPorId(id);
-        // Limpa as aspas inseridas pelo formato de requisições JSON brutas
         if (status != null) {
             status = status.replace("\"", "").trim();
         }
@@ -88,10 +92,9 @@ public class FuncionarioService {
     }
 
     public Funcionario salvar(FuncionarioDto dto, Long empresaId) {
-        // Fallback inteligente: aceita o ID da URL ou do corpo da requisição
         Long idEmpresaFinal = (empresaId != null) ? empresaId : dto.getEmpresa_id();
         if (idEmpresaFinal == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ID da empresa vinculada é obrigatório.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ID da empresa é obrigatório.");
         }
 
         Empresa empresa = empresaRepo.findById(idEmpresaFinal)
@@ -102,7 +105,7 @@ public class FuncionarioService {
         f.setEmail(dto.getEmail());
         f.setTelefone(dto.getTelefone());
         f.setCargo(dto.getCargo());
-        f.setCpf(dto.getCpf()); // Correção do estouro de Not-Null no banco
+        f.setCpf(dto.getCpf());
         f.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
         f.setStatus("OFFLINE");
         f.setEmpresa(empresa);

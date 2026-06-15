@@ -2,10 +2,10 @@ package com.dedetizacao.app.dedetizacao.Model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.List;
 
 @Entity
+@Table(name = "funcionarios")
 public class Funcionario {
 
     @Id
@@ -14,12 +14,9 @@ public class Funcionario {
 
     @Column(nullable = false)
     private String nome;
-    private Boolean ativo = true;
-    private String cargo;
 
     @Column(nullable = false, unique = true)
     private String cpf;
-    private String senha;
 
     @Column(unique = true)
     private String email;
@@ -27,95 +24,54 @@ public class Funcionario {
     @Column(unique = true)
     private String telefone;
 
-    @ManyToOne
-    @JoinColumn(name = "empresa_id") // Define o nome da coluna de Chave Estrangeira (FK) no banco.
-    private Empresa empresa;
-
-    @OneToMany(mappedBy = "funcionario") // Lado inverso da relação; o controle de dados fica na classe Servico.
-    @JsonIgnore // Impede que a Api trave em um loop infinito ao converter os dados para JSON.
-    private List<Servico> servicos;
-
-    private String status;
-
+    private String senha;
+    private String cargo;
+    private String status; // "ONLINE" ou "OFFLINE"
+    private Boolean ativo = true;
     private Long usuarioId;
 
-    public Long getUsuarioId() {
-        return usuarioId;
-    }
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
 
-    public void setUsuarioId(Long usuarioId) {
-        this.usuarioId = usuarioId;
-    }// "ONLINE" ou "OFFLINE"
+    @OneToMany(mappedBy = "funcionario")
+    @JsonIgnore
+    private List<Servico> servicos;
+
+    // --- GETTERS & SETTERS ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
+
+    public String getCpf() { return cpf; }
+    public void setCpf(String cpf) { this.cpf = cpf; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
+
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
+    public String getCargo() { return cargo; }
+    public void setCargo(String cargo) { this.cargo = cargo; }
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public Boolean getAtivo() { return ativo; }
+    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
 
-    public String getCpf() {
-        return cpf;
-    }
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
+    public Empresa getEmpresa() { return empresa; }
+    public void setEmpresa(Empresa empresa) { this.empresa = empresa; }
 
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
-    }
-
-    public Boolean getAtivo() {
-        return ativo;
-    }
-
-    public void setAtivo(Boolean ativo) {
-        this.ativo = ativo;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getCargo() {
-        return cargo;
-    }
-
-    public void setCargo(String cargo) {
-        this.cargo = cargo;
-    }
-
-    public Empresa getEmpresa() {
-        return empresa;
-    }
-
-    public void setEmpresa(Empresa empresa) {
-        this.empresa = empresa;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
-    }
+    public List<Servico> getServicos() { return servicos; }
+    public void setServicos(List<Servico> servicos) { this.servicos = servicos; }
 }

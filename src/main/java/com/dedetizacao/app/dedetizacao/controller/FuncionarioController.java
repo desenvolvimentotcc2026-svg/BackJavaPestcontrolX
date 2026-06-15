@@ -24,20 +24,18 @@ public class FuncionarioController {
     }
 
     @GetMapping
-    public List<FuncionarioDto> listartodos() {
+    public List<FuncionarioDto> listarTodos() {
         return funcionarioService.listarTodos()
                 .stream()
-                .map(f -> funcionarioService.toDTO(f))
+                .map(funcionarioService::toDTO)
                 .toList();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable long id){
-        // Validação prévia profissional para evitar falsos retornos 404
         if (!funcionarioRepository.existsById(id)){
             return ResponseEntity.notFound().build();
         }
-
         funcionarioRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
@@ -65,7 +63,7 @@ public class FuncionarioController {
     public List<FuncionarioDto> listarOnline() {
         return funcionarioService.listarPorStatus("ONLINE")
                 .stream()
-                .map(f -> funcionarioService.toDTO(f))
+                .map(funcionarioService::toDTO)
                 .toList();
     }
 }
