@@ -31,8 +31,8 @@ public class OrdemDeServico {
 
     @Column(length = 2000)
     private String observacaoTecnica;
-
-    @Lob
+    
+    @Column(columnDefinition = "TEXT")
     private String stringFotoBase64;
 
     public OrdemDeServico() {
