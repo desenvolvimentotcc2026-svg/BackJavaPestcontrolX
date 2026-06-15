@@ -50,6 +50,13 @@ public class EmpresaController {
                     if (empresa.getSobre() != null) existente.setSobre(empresa.getSobre());
                     if (empresa.getMensagemAutomatica() != null) existente.setMensagemAutomatica(empresa.getMensagemAutomatica());
 
+                    // SALVANDO OS NOVOS DADOS
+                    if (empresa.getContatoPlantao() != null) existente.setContatoPlantao(empresa.getContatoPlantao());
+                    if (empresa.getJanelaAtendimento() != null) existente.setJanelaAtendimento(empresa.getJanelaAtendimento());
+                    if (empresa.getLicencaSanitaria() != null) existente.setLicencaSanitaria(empresa.getLicencaSanitaria());
+                    if (empresa.getResponsavelTecnico() != null) existente.setResponsavelTecnico(empresa.getResponsavelTecnico());
+                    if (empresa.getEspecialidades() != null) existente.setEspecialidades(empresa.getEspecialidades());
+
                     if (empresa.getEndereco() != null) {
                         existente.setEndereco(empresa.getEndereco());
                     }
