@@ -84,4 +84,25 @@ public class OrdemDeServicoService {
     public List<OrdemDeServico> listarAtivasPorEmpresa(Long id) {
         return repository.findAtivasByEmpresaId(id);
     }
+
+    // Adicione este método no final do seu OrdemDeServicoService.java
+    public OrdemDeServico buscarOrdemAtivaTecnico(Long tecnicoId) {
+        return this.listar().stream()
+                .filter(os -> "EM_ANDAMENTO".equals(os.getStatus()) && String.valueOf(tecnicoId).equals(os.getFuncionario()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public List<OrdemDeServico> buscarOrdensPorDataEEmpresa(String data, Long empresaId) {
+        return this.listar().stream()
+                .filter(os -> os.getEmpresaId() != null && os.getEmpresaId().equals(empresaId)
+                        && os.getDataAgendamento() != null && os.getDataAgendamento().contains(data))
+                .toList();
+    }
+
+    // Adicione este método no final do seu OrdemDeServicoService.java
+    public void dispararAlertaPanico(Long id) {
+        System.out.println("🚨 ALERTA DE PÂNICO ACIONADO PARA A ORDEM ID: " + id);
+        // Aqui você pode implementar lógicas extras como mudar status da OS para 'EM_ALERTA' se quiser
+    }
 }

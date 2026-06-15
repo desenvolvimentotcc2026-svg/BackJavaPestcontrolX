@@ -57,9 +57,30 @@ public class OrdemDeServicoController {
         return ResponseEntity.ok(service.listarAtivasPorEmpresa(empresaId));
     }
 
+    // Compatibilidade com id de funcionário genérico
     @GetMapping("/funcionario/{funcionarioId}")
     public ResponseEntity<List<OrdemDeServico>> listarPorFuncionario(@PathVariable Long funcionarioId) {
         return ResponseEntity.ok(service.listarPorFuncionario(funcionarioId));
+    }
+
+    // ALINHAMENTO MOBILE: Rota duplicada para mapear a chamada 'tecnico' do app Android
+    @GetMapping("/tecnico/{tecnicoId}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorTecnico(@PathVariable Long tecnicoId) {
+        return ResponseEntity.ok(service.listarPorFuncionario(tecnicoId));
+    }
+
+    // ALINHAMENTO MOBILE: Busca ordem ativa de um técnico específico
+    @GetMapping("/tecnico/{tecnicoId}/ativa")
+    public ResponseEntity<OrdemDeServico> buscarOrdemAtivaTecnico(@PathVariable Long tecnicoId) {
+        return ResponseEntity.ok(service.buscarOrdemAtivaTecnico(tecnicoId));
+    }
+
+    // ALINHAMENTO MOBILE: Filtra a agenda da empresa por data diretamente na API
+    @GetMapping("/empresa/{empresaId}/agenda")
+    public ResponseEntity<List<OrdemDeServico>> buscarOrdensPorDataEEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam("data") String data) {
+        return ResponseEntity.ok(service.buscarOrdensPorDataEEmpresa(data, empresaId));
     }
 
     @GetMapping("/status/{status}")
@@ -71,25 +92,25 @@ public class OrdemDeServicoController {
     public ResponseEntity<OrdemDeServico> aceitarOrdem(
             @PathVariable Long id,
             @RequestParam(value = "funcionarioId", required = false) Long funcionarioId) {
-        OrdemDeServico atualizada = service.aceitar(id, funcionarioId);
-        publicarMudancaStatus(atualizada);
-        return ResponseEntity.ok(atualizada);
+        OrdemDeServico updated = service.aceitar(id, funcionarioId);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}/iniciar")
     public ResponseEntity<OrdemDeServico> iniciarOrdem(@PathVariable Long id) {
-        OrdemDeServico atualizada = service.iniciar(id);
-        publicarMudancaStatus(atualizada);
-        return ResponseEntity.ok(atualizada);
+        OrdemDeServico updated = service.iniciar(id);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}/finalizar")
     public ResponseEntity<OrdemDeServico> finalizarOrdem(
             @PathVariable Long id,
             @RequestBody(required = false) OrdemDeServico dadosFinalizacao) {
-        OrdemDeServico atualizada = service.finalizar(id, dadosFinalizacao);
-        publicarMudancaStatus(atualizada);
-        return ResponseEntity.ok(atualizada);
+        OrdemDeServico updated = service.finalizar(id, dadosFinalizacao);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}/gps")
@@ -97,11 +118,18 @@ public class OrdemDeServicoController {
             @PathVariable Long id,
             @RequestParam Double latitude,
             @RequestParam Double longitude) {
-        OrdemDeServico atualizada = service.atualizarGps(id, latitude, longitude);
+        OrdemDeServico updated = service.atualizarGps(id, latitude, longitude);
         String payloadGps = String.format("{\"ordemId\":%d,\"latitude\":%f,\"longitude\":%f}", id, latitude, longitude);
         messagingTemplate.convertAndSend("/topic/gps/" + id, payloadGps);
-        publicarMudancaStatus(atualizada);
-        return ResponseEntity.ok(atualizada);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
+    }
+
+    // ALINHAMENTO MOBILE: Recebe o gatilho de SOS/Pânico do técnico em rota
+    @PostMapping("/{id}/panico")
+    public ResponseEntity<Void> dispararAlertaPanico(@PathVariable Long id) {
+        service.dispararAlertaPanico(id);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
@@ -127,5 +155,4 @@ public class OrdemDeServicoController {
             messagingTemplate.convertAndSend("/topic/tecnico/" + ordem.getFuncionario(), ordem);
         }
     }
-
 }
