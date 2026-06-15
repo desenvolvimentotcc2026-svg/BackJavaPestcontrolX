@@ -112,7 +112,7 @@ public class AuthController {
                     .body(Map.of("message", "Código de verificação inválido ou expirado"));
         }
 
-        // Sucesso: limpa o token usado e gera o JWT de sessão
+        // se for sucesso limpa o token usado e gera o JWT de sessão
         user.setCodigoVerificacao(null);
         usuarioService.salvar(user);
 

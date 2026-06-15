@@ -1,88 +1,158 @@
 package com.dedetizacao.app.dedetizacao.controller;
 
-import java.util.List;
-import com.dedetizacao.app.dedetizacao.Model.Empresa;
-import com.dedetizacao.app.dedetizacao.Repository.EmpresaRepository;
-import com.dedetizacao.app.dedetizacao.Service.EmpresaService;
+import com.dedetizacao.app.dedetizacao.Model.OrdemDeServico;
+import com.dedetizacao.app.dedetizacao.Service.OrdemDeServicoService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/empresas")
+@RequestMapping("/api/ordens")
 @CrossOrigin(origins = "*")
-public class EmpresaController {
+public class OrdemDeServicoController {
 
-    private final EmpresaRepository repository;
-    private final EmpresaService service;
+    private final OrdemDeServicoService service;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public EmpresaController(EmpresaRepository repository, EmpresaService service) {
-        this.repository = repository;
+    public OrdemDeServicoController(OrdemDeServicoService service, SimpMessagingTemplate messagingTemplate) {
         this.service = service;
+        this.messagingTemplate = messagingTemplate;
     }
 
-    @PostMapping
-    public ResponseEntity<Empresa> criar(@RequestBody Empresa empresa) {
-        // 🔥 CORRIGIDO DE 'Salvar' PARA 'salvar'
-        return ResponseEntity.ok(service.salvar(empresa));
+    @PostMapping({"", "/criar"})
+    public ResponseEntity<OrdemDeServico> criarOrdem(@RequestBody OrdemDeServico ordem) {
+        OrdemDeServico ordemSalva = service.salvar(ordem);
+        publicarMudancaStatus(ordemSalva);
+        return ResponseEntity.ok(ordemSalva);
     }
 
     @GetMapping
-    public List<Empresa> listar() {
-        // 🔥 CORRIGIDO DE 'listartodos' PARA 'listarTodos'
-        return service.listarTodos();
+    public ResponseEntity<List<OrdemDeServico>> listarTodas() {
+        return ResponseEntity.ok(service.listar());
     }
 
-    @GetMapping("/busca")
-    public List<Empresa> buscarPorNome(@RequestParam String nome) {
-        return repository.findByNomeContainingIgnoreCase(nome);
+    @GetMapping("/{id}")
+    public ResponseEntity<OrdemDeServico> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    @GetMapping("/cnpj/{cnpj}")
-    public ResponseEntity<Empresa> buscarPorCnpj(@PathVariable String cnpj) {
-        return repository.findByCnpj(cnpj)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @GetMapping("/cliente/{clienteId}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorCliente(@PathVariable Long clienteId) {
+        return ResponseEntity.ok(service.listarPorCliente(clienteId));
+    }
+
+    @GetMapping("/cliente/{clienteId}/ativas")
+    public ResponseEntity<List<OrdemDeServico>> listarAtivasPorCliente(@PathVariable Long clienteId) {
+        return ResponseEntity.ok(service.listarAtivasPorCliente(clienteId));
+    }
+
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorEmpresa(@PathVariable Long empresaId) {
+        return ResponseEntity.ok(service.listarPorEmpresa(empresaId));
+    }
+
+    @GetMapping("/empresa/{empresaId}/ativas")
+    public ResponseEntity<List<OrdemDeServico>> listarAtivasPorEmpresa(@PathVariable Long empresaId) {
+        return ResponseEntity.ok(service.listarAtivasPorEmpresa(empresaId));
+    }
+
+    // Compatibilidade com id de funcionário genérico
+    @GetMapping("/funcionario/{funcionarioId}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorFuncionario(@PathVariable Long funcionarioId) {
+        return ResponseEntity.ok(service.listarPorFuncionario(funcionarioId));
+    }
+
+    // ALINHAMENTO MOBILE: Rota duplicada para mapear a chamada 'tecnico' do app Android
+    @GetMapping("/tecnico/{tecnicoId}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorTecnico(@PathVariable Long tecnicoId) {
+        return ResponseEntity.ok(service.listarPorFuncionario(tecnicoId));
+    }
+
+    // ALINHAMENTO MOBILE: Busca ordem ativa de um técnico específico
+    @GetMapping("/tecnico/{tecnicoId}/ativa")
+    public ResponseEntity<OrdemDeServico> buscarOrdemAtivaTecnico(@PathVariable Long tecnicoId) {
+        return ResponseEntity.ok(service.buscarOrdemAtivaTecnico(tecnicoId));
+    }
+
+    // ALINHAMENTO MOBILE: Filtra a agenda da empresa por data diretamente na API
+    @GetMapping("/empresa/{empresaId}/agenda")
+    public ResponseEntity<List<OrdemDeServico>> buscarOrdensPorDataEEmpresa(
+            @PathVariable Long empresaId,
+            @RequestParam("data") String data) {
+        return ResponseEntity.ok(service.buscarOrdensPorDataEEmpresa(data, empresaId));
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<OrdemDeServico>> listarPorStatus(@PathVariable String status) {
+        return ResponseEntity.ok(service.listarPorStatus(status));
+    }
+
+    @PutMapping("/{id}/aceitar")
+    public ResponseEntity<OrdemDeServico> aceitarOrdem(
+            @PathVariable Long id,
+            @RequestParam(value = "funcionarioId", required = false) Long funcionarioId) {
+        OrdemDeServico updated = service.aceitar(id, funcionarioId);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{id}/iniciar")
+    public ResponseEntity<OrdemDeServico> iniciarOrdem(@PathVariable Long id) {
+        OrdemDeServico updated = service.iniciar(id);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{id}/finalizar")
+    public ResponseEntity<OrdemDeServico> finalizarOrdem(
+            @PathVariable Long id,
+            @RequestBody(required = false) OrdemDeServico dadosFinalizacao) {
+        OrdemDeServico updated = service.finalizar(id, dadosFinalizacao);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PutMapping("/{id}/gps")
+    public ResponseEntity<OrdemDeServico> atualizarGps(
+            @PathVariable Long id,
+            @RequestParam Double latitude,
+            @RequestParam Double longitude) {
+        OrdemDeServico updated = service.atualizarGps(id, latitude, longitude);
+        String payloadGps = String.format("{\"ordemId\":%d,\"latitude\":%f,\"longitude\":%f}", id, latitude, longitude);
+        messagingTemplate.convertAndSend("/topic/gps/" + id, payloadGps);
+        publicarMudancaStatus(updated);
+        return ResponseEntity.ok(updated);
+    }
+
+    // ALINHAMENTO MOBILE: Recebe o gatilho de SOS/Pânico do técnico em rota
+    @PostMapping("/{id}/panico")
+    public ResponseEntity<Void> dispararAlertaPanico(@PathVariable Long id) {
+        service.dispararAlertaPanico(id);
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        if (!repository.existsById(id)) {
-            return ResponseEntity.notFound().build();
-        }
         service.deletar(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Empresa> atualizar(@PathVariable Long id, @RequestBody Empresa empresa) {
-        return repository.findById(id)
-                .map(existente -> {
-                    if (empresa.getNome() != null) existente.setNome(empresa.getNome());
-                    if (empresa.getEmail() != null) existente.setEmail(empresa.getEmail());
-                    if (empresa.getCnpj() != null) existente.setCnpj(empresa.getCnpj());
-                    if (empresa.getSobre() != null) existente.setSobre(empresa.getSobre());
-                    if (empresa.getMensagemAutomatica() != null) existente.setMensagemAutomatica(empresa.getMensagemAutomatica());
-                    if (empresa.getEndereco() != null) existente.setEndereco(empresa.getEndereco());
+    private void publicarMudancaStatus(OrdemDeServico ordem) {
+        if (ordem == null || ordem.getId() == null) {
+            return;
+        }
 
-                    // 🔥 CORRIGIDO DE 'Salvar' PARA 'salvar'
-                    return ResponseEntity.ok(service.salvar(existente));
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
+        messagingTemplate.convertAndSend("/topic/ordens/" + ordem.getId(), ordem);
 
-    @PostMapping("/{id}")
-    public ResponseEntity<Empresa> atualizarPost(@PathVariable Long id, @RequestBody Empresa empresa) {
-        return atualizar(id, empresa);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Empresa> buscarPorId(@PathVariable Long id) {
-        try {
-            // 🔥 CORRIGIDO DE 'buscarporid' PARA 'buscarPorId'
-            Empresa empresa = service.buscarPorId(id);
-            return ResponseEntity.ok(empresa);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+        if (ordem.getClienteId() != null) {
+            messagingTemplate.convertAndSend("/topic/solicitacoes/" + ordem.getClienteId(), ordem);
+        }
+        if (ordem.getEmpresaId() != null) {
+            messagingTemplate.convertAndSend("/topic/empresa/" + ordem.getEmpresaId(), ordem);
+        }
+        if (ordem.getFuncionario() != null && !ordem.getFuncionario().isBlank()) {
+            messagingTemplate.convertAndSend("/topic/tecnico/" + ordem.getFuncionario(), ordem);
         }
     }
 }
