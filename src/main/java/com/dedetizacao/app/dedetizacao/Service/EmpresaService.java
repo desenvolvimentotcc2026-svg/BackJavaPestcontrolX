@@ -33,7 +33,6 @@ public class EmpresaService {
 
     public Empresa salvarFromRegister(RegisterRequest req, Long usuarioId) {
         Empresa e = new Empresa();
-        e.setUsuarioId(usuarioId);
 
         // Preenchendo os campos obrigatórios
         e.setNome(req.getNome());
