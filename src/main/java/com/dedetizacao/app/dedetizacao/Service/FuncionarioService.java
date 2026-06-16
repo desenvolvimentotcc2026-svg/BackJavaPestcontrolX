@@ -38,36 +38,17 @@ public class FuncionarioService {
         return repo.findAll();
     }
 
-    public Funcionario buscarPorId(Long id) {
-        return repo.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
-    }
-
-    public Funcionario atualizar(Long id, FuncionarioDto dto) {
-        Funcionario func = buscarPorId(id);
-        func.setNome(dto.getNome());
-        func.setEmail(dto.getEmail());
-        func.setTelefone(dto.getTelefone());
-        func.setCargo(dto.getCargo());
-        func.setCpf(dto.getCpf());
-
-        if (dto.getAtivo() != null) {
-            func.setAtivo(dto.getAtivo());
+    // 🟢 MÉTODO ADICIONADO: Corrige o erro de "cannot find symbol" resolvendo a deleção
+    public void deletarPorId(long id) {
+        if (!repo.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado.");
         }
-
-        if (dto.getEmpresa_id() != null) {
-            Empresa em = empresaRepo.findById(dto.getEmpresa_id())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa não encontrada"));
-            func.setEmpresa(em);
-        }
-        return repo.save(func);
+        repo.deleteById(id);
     }
 
     public void atualizarStatus(Long id, String status) {
-        Funcionario f = buscarPorId(id);
-        if (status != null) {
-            status = status.replace("\"", "").trim();
-        }
+        Funcionario f = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
         f.setStatus(status);
         repo.save(f);
     }
@@ -106,10 +87,21 @@ public class FuncionarioService {
         f.setTelefone(dto.getTelefone());
         f.setCargo(dto.getCargo());
         f.setCpf(dto.getCpf());
-        f.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
-        f.setStatus("OFFLINE");
+        f.setAtivo(dto.getAtivo());
         f.setEmpresa(empresa);
-
         return repo.save(f);
+    }
+
+    public Funcionario atualizar(Long id, FuncionarioDto dto) {
+        Funcionario existente = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Funcionário não encontrado"));
+
+        if (dto.getNome() != null) existente.setNome(dto.getNome());
+        if (dto.getEmail() != null) existente.setEmail(dto.getEmail());
+        if (dto.getTelefone() != null) existente.setTelefone(dto.getTelefone());
+        if (dto.getCargo() != null) existente.setCargo(dto.getCargo());
+        if (dto.getAtivo() != null) existente.setAtivo(dto.getAtivo());
+
+        return repo.save(existente);
     }
 }

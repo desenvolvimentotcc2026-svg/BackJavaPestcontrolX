@@ -6,6 +6,7 @@ import com.dedetizacao.app.dedetizacao.Service.FuncionarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -36,7 +37,9 @@ public class FuncionarioController {
         try {
             funcionarioService.deletarPorId(id);
             return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).build();
+        } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
