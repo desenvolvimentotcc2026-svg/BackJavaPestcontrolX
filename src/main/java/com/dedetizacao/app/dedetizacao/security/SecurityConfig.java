@@ -38,16 +38,20 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔥 A CHAVE PARA RESOLVER O ERRO 401: Liberar a requisição OPTIONS do navegador
+                        // Liberar a requisição OPTIONS do navegador
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/ping").permitAll()
-                        .requestMatchers("/ws-pestcontrol/**").permitAll()
+                        // Liberando tanto a rota normal quanto a rota do SockJS
+                        .requestMatchers("/ws-pestcontrol/**", "/ws-pestcontrol-sockjs/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/api/empresas/**").permitAll()
                         .requestMatchers("/agendamentos/**").permitAll()
+
+                        .anyRequest().authenticated()
+                )
 
                         .anyRequest().authenticated()
                 )
