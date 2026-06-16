@@ -155,4 +155,28 @@ public class OrdemDeServicoController {
             messagingTemplate.convertAndSend("/topic/tecnico/" + ordem.getFuncionario(), ordem);
         }
     }
+    
+    @PutMapping("/{id}/aceitar")
+    public ResponseEntity<OrdemDeServico> aceitarOrdem(
+            @PathVariable Long id,
+            @RequestParam Long funcionarioId,
+            @RequestParam String data,
+            @RequestParam String status) {
+
+        // Recupera a OS existente usando a regra de negócio do Service
+        OrdemDeServico ordem = service.buscarPorId(id);
+
+        // Aloca os novos parâmetros de sincronização móvel tática
+        ordem.setFuncionario(String.valueOf(funcionarioId));
+        ordem.setDataAgendamento(data);
+        ordem.setStatus(status);
+
+        // Salva e atualiza o estado no repositório de dados
+        OrdemDeServico updated = service.salvar(ordem);
+
+        // Dispara a alteração em tempo real via WebSocket/SimpMessagingTemplate para o App
+        publicarMudancaStatus(updated);
+
+        return ResponseEntity.ok(updated);
+    }
 }
