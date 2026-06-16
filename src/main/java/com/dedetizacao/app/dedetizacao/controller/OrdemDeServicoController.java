@@ -88,15 +88,6 @@ public class OrdemDeServicoController {
         return ResponseEntity.ok(service.listarPorStatus(status));
     }
 
-    @PutMapping("/{id}/aceitar")
-    public ResponseEntity<OrdemDeServico> aceitarOrdem(
-            @PathVariable Long id,
-            @RequestParam(value = "funcionarioId", required = false) Long funcionarioId) {
-        OrdemDeServico updated = service.aceitar(id, funcionarioId);
-        publicarMudancaStatus(updated);
-        return ResponseEntity.ok(updated);
-    }
-
     @PutMapping("/{id}/iniciar")
     public ResponseEntity<OrdemDeServico> iniciarOrdem(@PathVariable Long id) {
         OrdemDeServico updated = service.iniciar(id);
@@ -159,24 +150,28 @@ public class OrdemDeServicoController {
     @PutMapping("/{id}/aceitar")
     public ResponseEntity<OrdemDeServico> aceitarOrdem(
             @PathVariable Long id,
-            @RequestParam Long funcionarioId,
-            @RequestParam String data,
-            @RequestParam String status) {
+            @RequestParam(required = false) Long funcionarioId,
+            @RequestParam(required = false) String data,
+            @RequestParam(required = false) String status) {
 
-        // Recupera a OS existente usando a regra de negócio do Service
-        OrdemDeServico ordem = service.buscarPorId(id);
+        OrdemDeServico updated;
 
-        // Aloca os novos parâmetros de sincronização móvel tática
-        ordem.setFuncionario(String.valueOf(funcionarioId));
-        ordem.setDataAgendamento(data);
-        ordem.setStatus(status);
+        // Se data e status foram fornecidos, usa a lógica de sincronização (segundo método original)
+        if (data != null && status != null) {
+            OrdemDeServico ordem = service.buscarPorId(id);
+            if (funcionarioId != null) {
+                ordem.setFuncionario(String.valueOf(funcionarioId));
+            }
+            ordem.setDataAgendamento(data);
+            ordem.setStatus(status);
+            updated = service.salvar(ordem);
+        }
+        // Caso contrário, usa a lógica padrão (primeiro método original)
+        else {
+            updated = service.aceitar(id, funcionarioId);
+        }
 
-        // Salva e atualiza o estado no repositório de dados
-        OrdemDeServico updated = service.salvar(ordem);
-
-        // Dispara a alteração em tempo real via WebSocket/SimpMessagingTemplate para o App
         publicarMudancaStatus(updated);
-
         return ResponseEntity.ok(updated);
     }
 }
