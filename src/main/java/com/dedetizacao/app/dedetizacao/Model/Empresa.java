@@ -65,8 +65,6 @@ public class Empresa {
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public String getSobre() { return sobre; }
     public void setSobre(String sobre) { this.sobre = sobre; }
