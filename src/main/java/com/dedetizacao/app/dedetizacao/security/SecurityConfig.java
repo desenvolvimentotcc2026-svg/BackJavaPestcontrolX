@@ -52,9 +52,7 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated()
                 )
-
-                        .anyRequest().authenticated()
-                )
+                
                 .exceptionHandling(handling -> handling
                         .authenticationEntryPoint((request, response, authException) -> {
                             System.out.println("❌ [BLOQUEIO SECURITY] Rota recusada (401): " + request.getRequestURI());
