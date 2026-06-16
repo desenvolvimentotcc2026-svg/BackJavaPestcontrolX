@@ -78,6 +78,7 @@ public class FuncionarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "O ID da empresa é obrigatório.");
         }
 
+        // É DAQUI QUE VINHA O SEU 404! O Spring não estava encontrando a Empresa com ID 28.
         Empresa empresa = empresaRepo.findById(idEmpresaFinal)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Empresa informada não existe"));
 
