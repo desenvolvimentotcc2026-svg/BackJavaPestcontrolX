@@ -118,18 +118,21 @@ public class AuthController {
 
         String tokenJwt = jwtService.gerarToken(user.getEmail());
 
+        // 1. Inicializa o mapa
         Map<String, Object> response = new HashMap<>();
+
+    // 2. Coloca os dados
         response.put("token", tokenJwt);
         response.put("tipo", user.getTipo().name());
         response.put("id", user.getId());
         response.put("nome", user.getNome());
 
-        f (user.getEmpresa() != null) {
+// 3. Verifica a empresa e adiciona se existir
+        if (user.getEmpresa() != null) {
             response.put("empresa_id", user.getEmpresa().getId());
-            // Se o seu Android precisar de mais dados da empresa, pode adicionar aqui:
-             response.put("empresa_nome", user.getEmpresa().getNome());
         }
 
+// 4. Retorna a resposta
         return ResponseEntity.ok(response);
     }
 
