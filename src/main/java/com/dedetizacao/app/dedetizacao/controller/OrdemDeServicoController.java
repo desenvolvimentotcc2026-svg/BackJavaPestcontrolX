@@ -174,4 +174,22 @@ public class OrdemDeServicoController {
         publicarMudancaStatus(updated);
         return ResponseEntity.ok(updated);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<OrdemDeServico> atualizarOrdem(@PathVariable Long id, @RequestBody OrdemDeServico ordemAtualizada) {
+
+        // 1. Verifica se a ordem existe (o buscarPorId já lança exceção se não achar)
+        OrdemDeServico ordemExistente = service.buscarPorId(id);
+
+        // 2. Garante que a ordem atualizada mantenha o ID correto passado na URL
+        ordemAtualizada.setId(id);
+
+        // 3. Salva a ordem no banco (como ela já tem um ID, o JPA vai fazer um UPDATE em vez de INSERT)
+        OrdemDeServico ordemSalva = service.salvar(ordemAtualizada);
+
+        // 4. Dispara a notificação pro seu WebSocket (Agenda/App)
+        publicarMudancaStatus(ordemSalva);
+
+        return ResponseEntity.ok(ordemSalva);
+    }
 }
