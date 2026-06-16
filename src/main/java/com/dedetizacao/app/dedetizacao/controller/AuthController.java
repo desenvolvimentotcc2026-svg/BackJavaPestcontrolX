@@ -118,12 +118,19 @@ public class AuthController {
 
         String tokenJwt = jwtService.gerarToken(user.getEmail());
 
-        return ResponseEntity.ok(Map.of(
-                "token", tokenJwt,
-                "tipo", user.getTipo().name(),
-                "id", user.getId(),
-                "nome", user.getNome()
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", tokenJwt);
+        response.put("tipo", user.getTipo().name());
+        response.put("id", user.getId());
+        response.put("nome", user.getNome());
+
+        f (user.getEmpresa() != null) {
+            response.put("empresa_id", user.getEmpresa().getId());
+            // Se o seu Android precisar de mais dados da empresa, pode adicionar aqui:
+             response.put("empresa_nome", user.getEmpresa().getNome());
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
