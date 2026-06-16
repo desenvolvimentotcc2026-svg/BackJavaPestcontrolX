@@ -155,7 +155,7 @@ public class OrdemDeServicoController {
             messagingTemplate.convertAndSend("/topic/tecnico/" + ordem.getFuncionario(), ordem);
         }
     }
-    
+
     @PutMapping("/{id}/aceitar")
     public ResponseEntity<OrdemDeServico> aceitarOrdem(
             @PathVariable Long id,
