@@ -18,7 +18,7 @@ public class Empresa {
     private String cnpj;
     private String nome;
 
-    private Long usuarioId;
+    //private Long usuarioId;
 
     @Column(columnDefinition = "TEXT")
     private String sobre;

@@ -66,6 +66,25 @@ public class Usuario {
 
     public String getCnpj() { return cnpj; }
 
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
+
+    // Adicione este método para facilitar o acesso no JSON e no Android
+    public Long getEmpresaId() {
+        return (empresa != null) ? empresa.getId() : null;
+    }
+
+
+    public Empresa getEmpresa() {
+        return empresa;
+    }
+
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
