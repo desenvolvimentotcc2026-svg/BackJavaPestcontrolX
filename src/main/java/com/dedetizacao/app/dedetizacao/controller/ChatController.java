@@ -27,6 +27,13 @@ public class ChatController {
     public void rotearMensagem(@DestinationVariable Long empresaId, @DestinationVariable Long clienteId, Mensagem mensagem) {
         String topicoCanal = "/topic/chat/" + empresaId + "/" + clienteId;
 
+        // 🚨 SALVA-VIDAS DO BANCO DE DADOS (ERRO 23503):
+        // Como o site (Empresa) não é um usuário da tabela 'usuarios', forçamos o ID para 0L.
+        // O banco de dados aceita 0L como um "Remetente de Sistema/Bot".
+        if ("EMPRESA".equalsIgnoreCase(mensagem.getTipoRemetente())) {
+            mensagem.setRemetenteId(0L);
+        }
+
         if (mensagem.getConteudo() != null && mensagem.getConteudo().equalsIgnoreCase("[START_BOT]")) {
             dispararRespostaBot(empresaId, clienteId, obterMenuPrincipal());
             return;
@@ -38,7 +45,6 @@ public class ChatController {
             return;
         }
 
-        // Processamento de opções do Menu do Bot
         String input = mensagem.getConteudo() != null ? mensagem.getConteudo().trim() : "";
 
         switch (input) {
@@ -52,11 +58,10 @@ public class ChatController {
                 dispararRespostaBot(empresaId, clienteId, obterRastreamentoGPS());
                 break;
             case "4":
-                // Dispara o comando invisível interceptado nativamente pelo Android
                 dispararRespostaBot(empresaId, clienteId, "[ABRIR_FORMULARIO_NATIVO]");
                 break;
             default:
-                // Tráfego normal entre Humanos (Cliente/Técnico) - persiste e encaminha
+                // Tráfego normal salvo e encaminhado para o Celular
                 mensagem.setDataEnvio(LocalDateTime.now());
                 Mensagem salva = mensagemRepository.save(mensagem);
                 messagingTemplate.convertAndSend(topicoCanal, salva);
@@ -108,7 +113,7 @@ public class ChatController {
 
     @PostMapping("/api/chat/trigger-acceptance")
     public ResponseEntity<Void> dispararAceitacaoOrdemRealTime(@RequestParam Long clienteId, @RequestParam Long ordemId) {
-        Long empresaIdPadrao = 42L;
+        Long empresaIdPadrao = 3L;
 
         Mensagem redirectMsg = new Mensagem();
         redirectMsg.setEmpresaId(empresaIdPadrao);
