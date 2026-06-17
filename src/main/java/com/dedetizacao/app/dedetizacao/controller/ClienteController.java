@@ -29,9 +29,14 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.buscarPorId(id));
     }
 
-    // Aceita criar um cliente e vinculá-lo a uma empresa caso passe o ID
+
+    @PostMapping
+    public ResponseEntity<Cliente> salvarSimples(@RequestBody ClienteDto dto, @RequestParam(required = false) Long empresaId) {
+        return ResponseEntity.ok(clienteService.criarFromDto(dto, empresaId));
+    }
+
     @PostMapping("/empresa/{empresaId}")
-    public ResponseEntity<Cliente> salvar(@RequestBody ClienteDto dto, @PathVariable(required = false) Long empresaId) {
+    public ResponseEntity<Cliente> salvarComEmpresa(@RequestBody ClienteDto dto, @PathVariable Long empresaId) {
         return ResponseEntity.ok(clienteService.criarFromDto(dto, empresaId));
     }
 
