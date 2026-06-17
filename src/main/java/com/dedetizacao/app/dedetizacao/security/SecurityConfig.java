@@ -40,6 +40,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Liberar a requisição OPTIONS do navegador
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/ws-chat/**", "/chat/**", "/ws/**").permitAll()
+
 
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/ping").permitAll()

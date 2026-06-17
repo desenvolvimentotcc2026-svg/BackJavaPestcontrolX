@@ -58,4 +58,9 @@ public class ClienteService {
             clienteRepository.deleteById(id);
         }
     }
+
+
+    public List<Cliente> listarPorEmpresa(Long empresaId) {
+        return clienteRepository.findByEmpresaId(empresaId);
+    }
 }

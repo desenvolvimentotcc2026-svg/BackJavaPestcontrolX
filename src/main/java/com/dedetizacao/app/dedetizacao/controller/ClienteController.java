@@ -29,7 +29,6 @@ public class ClienteController {
         return ResponseEntity.ok(clienteService.buscarPorId(id));
     }
 
-
     @PostMapping
     public ResponseEntity<Cliente> salvarSimples(@RequestBody ClienteDto dto, @RequestParam(required = false) Long empresaId) {
         return ResponseEntity.ok(clienteService.criarFromDto(dto, empresaId));
@@ -49,5 +48,10 @@ public class ClienteController {
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         clienteService.deletar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/empresa/{empresaId}")
+    public ResponseEntity<List<Cliente>> listarPorEmpresa(@PathVariable Long empresaId) {
+        return ResponseEntity.ok(clienteService.listarPorEmpresa(empresaId));
     }
 }
